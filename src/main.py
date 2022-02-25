@@ -2,6 +2,7 @@ from subprocess import check_output, CalledProcessError
 import json
 import numpy as np
 import math
+import sys
 
 def invokeJar(inputFile, modeParameters):
     # print(inputFile)
@@ -89,7 +90,10 @@ if __name__ == '__main__':
     performanceEvaluation = {}
     global runIndex
     runIndex = 0
+    log_file = open("message.log", "w")
+    sys.stdout = log_file
     patternSearch(0.011, 2, 0, 9999999, 0, 1.0, 1, 64)
+    log_file.close()
 
     # performance = invokeJar("modelInputFiles/changedInterest-5-13", 'RMSD')
     # print(performance)
