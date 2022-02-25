@@ -1,19 +1,25 @@
 from subprocess import check_output, CalledProcessError
 import json
 import numpy as np
+import math
 
 def invokeJar(inputFile, modeParameters):
     # print(inputFile)
     # print(modeParameters)
     try:
-        data = str(check_output(
+        data = check_output(
             ['java', '-jar', 'src/ressources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', inputFile + '.json', '-o', 'example-output.json',
-             '--noConsole', '--logPath', 'log.log', '--calculatePerformance', modeParameters], shell=True), 'UTF=8')
-        t = 0, data
+             '--noConsole', '--logPath', 'log.log', '--calculatePerformance', modeParameters], shell=True)
+        t = 0, data.decode('utf-8').rstrip()
         return data
     except CalledProcessError as e:
         t = e.returncode, e.message
 
+def mockInvokeJar(AT, IT):
+    if(AT > 0):
+        return (1/(AT*IT))
+    else:
+        return 999999
 
 def prepareJson(templateFile, adoptionThreshold, interestThreshold):
     f = open('src/ressources/example-input.json', "r")
@@ -35,7 +41,9 @@ def calculateGrid(minAT, maxAT, minIT, maxIT, startingIndex):
             currentIT = round(minIT + ((maxIT-minIT)/(resolution-1))*col)
             print('calculating for IT '+str(currentIT)+' and AT '+str(currentAT))
             prepareJson('src/modelInputFiles/changedInterest', currentAT, currentIT)
-            list[col][row] = invokeJar("src/modelInputFiles/changedInterest-" + str(currentAT)[2:len(str(currentAT))] + "-" + str(currentIT), mode)
+            list[col][row] = float(invokeJar("src/modelInputFiles/changedInterest-" + str(currentAT)[2:len(str(currentAT))] + "-" + str(currentIT), mode))
+    #        list[col][row] = mockInvokeJar(currentAT, currentIT)
+            print('Performance of run ' + str(currentIndex) + ': ' + str(list[col][row]))
             currentIndex += 1
             performanceEvaluation["run "+str(currentIndex)] = {
                 "adoptionThreshold": currentAT,
@@ -45,27 +53,30 @@ def calculateGrid(minAT, maxAT, minIT, maxIT, startingIndex):
     return list
 
 # Searches
-def patternSearch(acceptableDelta, maxAttempts, currentDelta, lowerBoundAT, upperBoundAT, lowerBoundIT, upperBoundIT):
-    print('CurrentAttempts: '+str(runIndex))
+def patternSearch(acceptableDelta, maxAttempts, currentAttempts, currentDelta, lowerBoundAT, upperBoundAT, lowerBoundIT, upperBoundIT):
+    print('CurrentMetaAttempts: '+str(currentAttempts))
     print(performanceEvaluation)
-    if (currentDelta <= acceptableDelta or runIndex >= maxAttempts):
+    if (currentDelta <= acceptableDelta or currentAttempts >= maxAttempts):
         return currentDelta, runIndex
     else:
         gridResultList = np.array(calculateGrid(lowerBoundAT, upperBoundAT, lowerBoundIT, upperBoundIT, runIndex))
         # Finding the index with the lowest error, adapted from https://devenum.com/find-min-value-index-in-numpy-array/
-        minvalInCols = np.amin(gridResultList, axis=0)
-        minvalInRows = np.amin(gridResultList, axis=1)
+        print(gridResultList)
         index = np.where(gridResultList == np.amin(gridResultList))
         listofIndices = list(zip(index[0], index[1]))
         # Make more elegant
         minInd = listofIndices[0]
         correspondingAT = lowerBoundAT + ((upperBoundAT-lowerBoundAT)/(resolution-1))*minInd[0]
         correspondingIT = round(lowerBoundIT + ((upperBoundIT-lowerBoundIT)/(resolution-1))*minInd[1])
-        print('Best index found at ' + str(minInd) + ' with AT ' + correspondingAT + ' and IT ' + correspondingIT)
+        print('Best index found at ' + str(minInd) + ' with AT ' + str(correspondingAT) + ' and IT ' + str(correspondingIT))
         newATRadius = (upperBoundAT - lowerBoundAT)/(scaleFactor*2)
         newITRadius = (upperBoundIT - lowerBoundIT) / (scaleFactor * 2)
-        print('new search in the bound of [' + str(correspondingAT-newATRadius) + ', '+ str(correspondingAT+newATRadius)+'] (AT) and [' + str(correspondingIT-newITRadius) + ', '+ str(correspondingIT+newITRadius)+']  (IT)')
-        return patternSearch(acceptableDelta, maxAttempts, gridResultList[minInd], correspondingAT-newATRadius, correspondingAT+newATRadius, correspondingIT-newITRadius, correspondingIT+newITRadius)
+        newLowerBoundAT = max(correspondingAT-newATRadius, 0)
+        newUpperBoundAT = min(correspondingAT+newATRadius, 1)
+        newLowerBoundIT = math.floor(max(correspondingIT-newITRadius, 0))
+        newUpperBoundIT = math.ceil(min(correspondingIT+newITRadius, 128))
+        print('new search in the bound of [' + str(newLowerBoundAT) + ', '+ str(newUpperBoundAT)+'] (AT) and [' + str(newLowerBoundIT) + ', '+ str(newUpperBoundIT)+']  (IT)')
+        return patternSearch(acceptableDelta, maxAttempts, currentAttempts+1, gridResultList[minInd], newLowerBoundAT, newUpperBoundAT, newLowerBoundIT, newUpperBoundIT)
 
 if __name__ == '__main__':
     global mode
@@ -78,7 +89,7 @@ if __name__ == '__main__':
     performanceEvaluation = {}
     global runIndex
     runIndex = 0
-    patternSearch(2, 12, 9999999, 0, 1.0, 1, 64)
+    patternSearch(0.011, 2, 0, 9999999, 0, 1.0, 1, 64)
 
     # performance = invokeJar("modelInputFiles/changedInterest-5-13", 'RMSD')
     # print(performance)
