@@ -8,3 +8,4 @@ src/modelInputFiles
 venv
 *.conf
 .idea/
+__pycache__
