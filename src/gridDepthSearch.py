@@ -2,6 +2,7 @@ from subprocess import check_output, CalledProcessError
 import json
 import numpy as np
 import math
+import sys
 
 # function to run the (repo-based current) version of the model instance with the conversation
 # given in the input file
@@ -13,7 +14,8 @@ def invokeJar(inputFile, modeParameters):
         t = 0, data.decode('utf-8').rstrip()
         return data
     except CalledProcessError as e:
-        t = e.returncode, e.message
+        print(e)
+        sys.exit()
 
 # mock function to test the rest of the module
 def mockInvokeJar(AT, IT):
