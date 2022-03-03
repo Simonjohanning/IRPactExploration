@@ -127,6 +127,7 @@ def nextDepthSearchIteration(searchParameters, searchState):
 # initializes the first call with relatively broad parameters
 # returns the state of the iteration that terminates the search
 def iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, errorDefinition):
+    print(f"Running simulation with parameters \n acceptableDelta: {acceptableDelta} \n maxDepth {maxDepth} \n scaleFactor {scaleFactor} \n resolution {resolution} \n errorDefinition {errorDefinition} ")
     # clean the folder of former modelInputFiles
     check_output(['rm', 'src/modelInputFiles/*.json', '-r', '-y'], shell=True)
     return nextDepthSearchIteration({
