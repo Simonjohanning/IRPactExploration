@@ -131,10 +131,10 @@ def iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, e
     # clean the folder of former modelInputFiles
     #check_output(['rm', 'src/modelInputFiles/*.json', '-r'], shell=True)
     return nextDepthSearchIteration({
-        'acceptableDelta': acceptableDelta,
-        'maxDepth': maxDepth,
-        'scaleFactor': scaleFactor,
-        'resolution': resolution,
+        'acceptableDelta': float(acceptableDelta),
+        'maxDepth': int(maxDepth),
+        'scaleFactor': float(scaleFactor),
+        'resolution': int(resolution),
         'printFlag': True,
         'errorDefinition': errorDefinition
     }, {
