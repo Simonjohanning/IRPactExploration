@@ -84,10 +84,10 @@ def nextDepthSearchIteration(searchParameters, searchState):
                 'currentDelta': gridResultList[currentMinIndex],
                 'currentRecursionDepth': searchState['currentRecursionDepth'] + 1,
                 "evaluationData": searchState['evaluationData'].append(resultDic),
-                "lowerBoundAT": newLowerBoundIT,
-                "upperBoundAT": newUpperBoundIT,
-                "lowerBoundIT": newLowerBoundAT,
-                "upperBoundIT": newUpperBoundAT
+                "lowerBoundAT": newLowerBoundAT,
+                "upperBoundAT": newUpperBoundAT,
+                "lowerBoundIT": newLowerBoundIT,
+                "upperBoundIT": newUpperBoundIT
             })
 
 # the grid depth search iteratively samples smaller / finer regions of the parameter space
@@ -109,8 +109,8 @@ def iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, e
         'currentDelta': 999999,
         'currentRecursionDepth': 0,
         "evaluationData": [],
-        "lowerBoundAT": 0.0,
-        "upperBoundAT": 1.0,
+        "lowerBoundAT": 0.5,
+        "upperBoundAT": 0.8,
         "lowerBoundIT": 1,
         "upperBoundIT": 86
     })
