@@ -2,6 +2,7 @@ import gridDepthSearch
 import sys
 import getopt
 import configuration
+import simulationRunner
 
 # module to initialize the optimization process and set the parameters.
 # Serves to isolate the functionality of the individual optimization methods from the data
@@ -21,7 +22,7 @@ def runOptimization(acceptableDelta, errorDefinition, optimizationMethod, parame
 # main method to set up the logging and invoke the optimization management method function
 if __name__ == '__main__':
     argv = sys.argv[1:]
-    opts, args = getopt.getopt(argv, 'd:e:msr', ['delta=', 'errorDef=', 'maxDepth=', 'scaleFactor=', 'resolution='])
+    opts, args = getopt.getopt(argv, 'd:e:msr', ['delta=', 'errorDef=', 'maxDepth=', 'scaleFactor=', 'resolution=', 'AT=', 'IT='])
     parameters = {}
     for o, a in opts:
         if o == '--delta':
@@ -34,10 +35,18 @@ if __name__ == '__main__':
             parameters['scaleFactor'] = a
         elif o == '--resolution':
             parameters['resolution'] = a
+        elif o == '--AT':
+            parameters['AT'] = a
+        elif o == '--IT':
+            parameters['IT'] = a
         else:
             print('unrecognized parameter ' + str(a))
+    if ('AT' in parameters and 'IT' in parameters):
+        baseInputFile = 'src/modelInputFiles/changedInterest'
+        simulationRunner.prepareJson(baseInputFile, parameters['AT'], parameters['IT'])
+        simulationRunner.invokeJar(baseInputFile + '-' + str(parameters['AT'])[2:len(str(parameters['AT']))]  + '-' + str(parameters['IT']), parameters['errorDef'])
     # TODO make safe
-    if ('delta' in parameters and 'errorDef' in parameters):
+    elif ('delta' in parameters and 'errorDef' in parameters):
         print(parameters)
         log_file = open("message.log", "w")
         sys.stdout = log_file
