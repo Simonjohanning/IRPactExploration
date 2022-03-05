@@ -1,6 +1,7 @@
 import gridDepthSearch
 import sys
 import getopt
+import configuration
 
 # module to initialize the optimization process and set the parameters.
 # Serves to isolate the functionality of the individual optimization methods from the data
@@ -12,7 +13,10 @@ def runOptimization(acceptableDelta, errorDefinition, optimizationMethod, parame
         # equidistantly until close enough to the reference time series or a given number of iterations are reached
         # parameters are the acceptableDelta, maxDepth, scaleFactor, resolution and errorDefinition;
         # see function for further documentation
-        print(gridDepthSearch.iterateGridDepthSearch(acceptableDelta, parameters['maxDepth'], parameters['scaleFactor'], parameters['resolution'], errorDefinition))
+        maxDepth = parameters['maxDepth'] if ('maxDepth' in parameters) else configuration.defaults['maxDepth']
+        scaleFactor = parameters['scaleFactor'] if ('scaleFactor' in parameters) else configuration.defaults['scaleFactor']
+        resolution = parameters['resolution'] if ('resolution' in parameters) else configuration.defaults['resolution']
+        print(gridDepthSearch.iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, errorDefinition))
 
 # main method to set up the logging and invoke the optimization management method function
 if __name__ == '__main__':
