@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import simulationRunner
+import configuration
 
 # function to set up the simulation runs of the current iteration level
 # calculates the parameters for equidistant sampling in the respective parameter region
@@ -78,7 +79,7 @@ def nextDepthSearchIteration(searchParameters, searchState):
             newLowerBoundAT = max(correspondingAT-newATRadius, 0)
             newUpperBoundAT = min(correspondingAT+newATRadius, 1)
             newLowerBoundIT = math.floor(max(correspondingIT-newITRadius, 0))
-            newUpperBoundIT = math.ceil(min(correspondingIT+newITRadius, 128))
+            newUpperBoundIT = math.ceil(min(correspondingIT+newITRadius, configuration.maxInterestThreshold))
             print('new search in the bound of [' + str(newLowerBoundAT) + ', '+ str(newUpperBoundAT)+'] (AT) and [' + str(newLowerBoundIT) + ', '+ str(newUpperBoundIT)+']  (IT)')
             return nextDepthSearchIteration(searchParameters, {
                 'currentDelta': gridResultList[currentMinIndex],
