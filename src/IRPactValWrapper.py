@@ -46,7 +46,7 @@ class IRPactValWrapperMAESingleVariable(AbstractWrapper):
 
     def objective_function_value(self, decision_variable_values):
             simulationRunner.prepareJsonDefaultIT(configuration.templateFile, decision_variable_values, configuration.defaultInterestThreshold)
-            return simulationRunner.invokeJar(configuration.templateFile + '-' + str(decision_variable_values['adoptionThreshold'])[2:len(str(decision_variable_values['adoptionThreshold']))] + "-" + str(configuration.defaultInterestThreshold), 'MAE')
+            return simulationRunner.invokeJar(configuration.templateFile + '-' + str(decision_variable_values)[2:len(str(decision_variable_values))] + "-" + str(configuration.defaultInterestThreshold), 'MAE')
 
     def initial_decision_variable_value_estimates(self):
         return configuration.optimizationStartValues['adoptionThreshold']
@@ -62,7 +62,7 @@ class IRPactValWrapperRMSESingleVariable(AbstractWrapper):
 
     def objective_function_value(self, decision_variable_values):
             simulationRunner.prepareJsonDefaultIT(configuration.templateFile, decision_variable_values, configuration.defaultInterestThreshold)
-            return simulationRunner.invokeJar(configuration.templateFile + '-' + str(decision_variable_values['adoptionThreshold'])[2:len(str(decision_variable_values['adoptionThreshold']))] + "-" + str(configuration.defaultInterestThreshold), 'RMSD')
+            return simulationRunner.invokeJar(configuration.templateFile + '-' + str(decision_variable_values)[2:len(str(decision_variable_values))] + "-" + str(configuration.defaultInterestThreshold), 'RMSD')
 
     def initial_decision_variable_value_estimates(self):
         return configuration.optimizationStartValues['adoptionThreshold']
