@@ -186,7 +186,7 @@ def runOptimization(errorDefinition, optimizationMethod, parameters):
             random_variable_coefficient = parameters['random_variable_coefficient'] if (
                         'random_variable_coefficient' in parameters) else configuration.spso_defaults[
                 'random_variable_coefficient']
-            result = spso.search(number_of_particles=number_of_particles,
+            result = spso.search(number_of_particiles=number_of_particles,
                                  number_of_iterations=number_of_iterations,
                                  social_coefficient=social_coefficient,
                                  random_variable_coefficient=random_variable_coefficient)
