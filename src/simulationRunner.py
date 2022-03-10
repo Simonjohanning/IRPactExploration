@@ -9,7 +9,7 @@ def invokeJar(inputFile, modeParameters):
         print('attempting to run jar')
         data = check_output(
             ['java', '-jar', 'src/resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', inputFile + '.json', '-o', 'example-output.json',
-             '--noConsole', '--logPath', 'log.log', '--calculatePerformance', modeParameters], shell=True)
+             '--noConsole', '--logPath', 'log.log', '--calculatePerformance', modeParameters])
         t = 0, data.decode('utf-8').rstrip()
         print('jar call successful')
         return data
