@@ -49,7 +49,7 @@ class IRPactValWrapperMAESingleVariable(AbstractWrapper):
             return simulationRunner.invokeJar(configuration.templateFile + '-' + str(decision_variable_values['adoptionThreshold'])[2:len(str(decision_variable_values['adoptionThreshold']))] + "-" + str(configuration.defaultInterestThreshold), 'MAE')
 
     def initial_decision_variable_value_estimates(self):
-        return configuration.optimizationStartValues
+        return configuration.optimizationStartValues['adoptionThreshold']
 
 # remove ugly hack with hardcoding the AT
 class IRPactValWrapperRMSESingleVariable(AbstractWrapper):
@@ -65,4 +65,4 @@ class IRPactValWrapperRMSESingleVariable(AbstractWrapper):
             return simulationRunner.invokeJar(configuration.templateFile + '-' + str(decision_variable_values['adoptionThreshold'])[2:len(str(decision_variable_values['adoptionThreshold']))] + "-" + str(configuration.defaultInterestThreshold), 'RMSD')
 
     def initial_decision_variable_value_estimates(self):
-        return configuration.optimizationStartValues
+        return configuration.optimizationStartValues['adoptionThreshold']
