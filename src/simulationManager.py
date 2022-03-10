@@ -231,7 +231,7 @@ def runOptimization(errorDefinition, optimizationMethod, parameters):
                                                bolzmann_constant=bolzmann_constant,
                                                cooling_factor=cooling_factor,
                                                energy_norm=energy_norm,
-                                               standard_deviation_for_estimation=standard_deviation_for_estimation,
+                                               standard_diviation_for_estimation=standard_deviation_for_estimation,
                                                ratio_of_energy_delta_over_evaluation_delta=ratio_of_energy_delta_over_evaluation_delta)
             print(result["best_decision_variable_values"][0])  # x value: Example: 1.0112
             print(result["best_decision_variable_values"][1])  # y value: Example: 0.9988
