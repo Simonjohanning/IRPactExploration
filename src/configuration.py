@@ -1,7 +1,8 @@
 gds_defaults = {
     'maxDepth':  2,
     'scaleFactor': 2,
-    'resolution': 3
+    'resolution': 3,
+    'acceptableDelta': 1.2
 }
 
 harmony_defaults = {

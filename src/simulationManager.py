@@ -13,8 +13,10 @@ def setParameters(opts):
     print(opts)
     parameters = {}
     for o, a in opts:
-        if o == '--delta':
-            parameters['delta'] = a
+        if o == '--acceptableDelta':
+            parameters['acceptableDelta'] = a
+        elif o == '--delta':
+            parameters['acceptableDelta'] = a
         elif o == '--errorDef':
             parameters['errorDef'] = a
         elif o == '--maxDepth':

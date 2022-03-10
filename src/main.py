@@ -6,7 +6,8 @@ import simulationManager
 # main method to set up the logging and invoke the optimization management method function
 if __name__ == '__main__':
     argv = sys.argv[1:]
-    opts, args = getopt.getopt(argv, 'd:e:msr', ['delta=', 'errorDef=', 'maxDepth=', 'scaleFactor=', 'resolution=', 'AT=', 'IT=', 'method='])
+    # include new parameters for MHs
+    opts, args = getopt.getopt(argv, 'd:e:msr', ['acceptableDelta=', 'delta=', 'errorDef=', 'maxDepth=', 'scaleFactor=', 'resolution=', 'AT=', 'IT=', 'method='])
     print(opts)
     parameters = simulationManager.setParameters(opts)
     # TODO make safe
