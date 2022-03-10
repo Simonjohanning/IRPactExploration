@@ -166,7 +166,7 @@ def runOptimization(errorDefinition, optimizationMethod, parameters):
                         'absorption_coefficient_gamma' in parameters) else configuration.firefly_defaults[
                 'absorption_coefficient_gamma']
             result = firefly.search(number_of_fireflies=number_of_fireflies,
-                                    maximum_generation=maximum_generation,
+                                    maximun_generation=maximum_generation,
                                     randomization_parameter_alpha=randomization_parameter_alpha,
                                     absorption_coefficient_gamma=absorption_coefficient_gamma)
             print(result["best_decision_variable_values"][0])  # x value: Example: 1.0112
