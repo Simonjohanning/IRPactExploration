@@ -36,3 +36,13 @@ def prepareJson(templateFile, adoptionThreshold, interestThreshold):
         'par_InDiracUnivariateDistribution_value'] = adoptionThreshold
     with open(templateFile+"-"+str(adoptionThreshold)[2:len(str(adoptionThreshold))]+"-"+str(interestThreshold)+".json", "w") as file:
         json.dump(fileData, file)
+
+def prepareJsonDefaultIT(templateFile, adoptionThreshold, interestThreshold):
+    f = open('src/resources/example-input.json', "r")
+    fileData = json.loads(f.read())
+    fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['INTEREST_THRESHOLD'][
+        'par_InDiracUnivariateDistribution_value'] = interestThreshold
+    fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['ADOPTION_THRESHOLD'][
+        'par_InDiracUnivariateDistribution_value'] = adoptionThreshold
+    with open(templateFile+"-"+str(adoptionThreshold['adoptionThreshold'])[2:len(str(adoptionThreshold['adoptionThreshold']))]+"-"+str(interestThreshold)+".json", "w") as file:
+        json.dump(fileData, file)

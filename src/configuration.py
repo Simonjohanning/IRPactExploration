@@ -59,5 +59,7 @@ optimizationStartValues = {
     'interestThreshold': 25
 }
 
+defaultInterestThreshold = 22
+
 pointListFile = 'src/resources/pointList'
 templateFile = 'src/modelInputFiles/changedInterest'

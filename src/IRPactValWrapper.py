@@ -34,3 +34,35 @@ class IRPactValWrapperRMSE(AbstractWrapper):
 
     def initial_decision_variable_value_estimates(self):
         return [configuration.optimizationStartValues[0], configuration.optimizationStartValues[1]]
+
+# remove ugly hack with hardcoding the AT
+class IRPactValWrapperMAESingleVariable(AbstractWrapper):
+
+    def maximum_decision_variable_values(self):
+        return configuration.optimizationBounds['maxAdoptionThreshold']
+
+    def minimum_decision_variable_values(self):
+        return configuration.optimizationBounds['minAdoptionThreshold']
+
+    def objective_function_value(self, decision_variable_values):
+            simulationRunner.prepareJsonDefaultIT(configuration.templateFile, decision_variable_values, configuration.defaultInterestThreshold)
+            return simulationRunner.invokeJar(configuration.templateFile + '-' + str(decision_variable_values['adoptionThreshold'])[2:len(str(decision_variable_values['adoptionThreshold']))] + "-" + str(configuration.defaultInterestThreshold), 'MAE')
+
+    def initial_decision_variable_value_estimates(self):
+        return configuration.optimizationStartValues
+
+# remove ugly hack with hardcoding the AT
+class IRPactValWrapperRMSESingleVariable(AbstractWrapper):
+
+    def maximum_decision_variable_values(self):
+        return configuration.optimizationBounds['maxAdoptionThreshold']
+
+    def minimum_decision_variable_values(self):
+        return configuration.optimizationBounds['minAdoptionThreshold']
+
+    def objective_function_value(self, decision_variable_values):
+            simulationRunner.prepareJsonDefaultIT(configuration.templateFile, decision_variable_values, configuration.defaultInterestThreshold)
+            return simulationRunner.invokeJar(configuration.templateFile + '-' + str(decision_variable_values['adoptionThreshold'])[2:len(str(decision_variable_values['adoptionThreshold']))] + "-" + str(configuration.defaultInterestThreshold), 'RMSD')
+
+    def initial_decision_variable_value_estimates(self):
+        return configuration.optimizationStartValues

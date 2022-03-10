@@ -197,7 +197,11 @@ def runOptimization(errorDefinition, optimizationMethod, parameters):
         if optimizationWrapper is None:
             pass
         else:
-            simulatedAnnealing = SimulatedAnnealing(optimizationWrapper, number_of_variables, objective)
+            if parameters['errorDef'] == 'MAE':
+                optimizationWrapper = IRPactValWrapper.IRPactValWrapperMAESingleVariable()
+            elif parameters['errorDef'] == 'RMSD':
+                optimizationWrapper = IRPactValWrapper.IRPactValWrapperRMSESingleVariable()
+            simulatedAnnealing = SimulatedAnnealing(optimizationWrapper, 1, objective)
             temperature = parameters['temperature'] if ('temperature' in parameters) else \
             configuration.simulatedAnnealing_defaults['temperature']
             minimal_temperature = parameters['minimal_temperature'] if ('minimal_temperature' in parameters) else \
@@ -233,8 +237,7 @@ def runOptimization(errorDefinition, optimizationMethod, parameters):
                                                energy_norm=energy_norm,
                                                standard_diviation_for_estimation=standard_deviation_for_estimation,
                                                ratio_of_energy_delta_over_evaluation_delta=ratio_of_energy_delta_over_evaluation_delta)
-            print(result["best_decision_variable_values"][0])  # x value: Example: 1.0112
-            print(result["best_decision_variable_values"][1])  # y value: Example: 0.9988
+            print(result["best_decision_variable_values"])  # x value: Example: 1.0112
             print(result["best_objective_function_value"])  # f(x,y) value: Example: 0.0563
     elif (optimizationMethod == 'geneticAlgorithm'):
         if optimizationWrapper is None:
