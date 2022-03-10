@@ -39,10 +39,10 @@ class IRPactValWrapperRMSE(AbstractWrapper):
 class IRPactValWrapperMAESingleVariable(AbstractWrapper):
 
     def maximum_decision_variable_values(self):
-        return configuration.optimizationBounds['maxAdoptionThreshold']
+        return [configuration.optimizationBounds['maxAdoptionThreshold']]
 
     def minimum_decision_variable_values(self):
-        return configuration.optimizationBounds['minAdoptionThreshold']
+        return [configuration.optimizationBounds['minAdoptionThreshold']]
 
     def objective_function_value(self, decision_variable_values):
             simulationRunner.prepareJsonDefaultIT(configuration.templateFile, decision_variable_values, configuration.defaultInterestThreshold)
@@ -55,10 +55,10 @@ class IRPactValWrapperMAESingleVariable(AbstractWrapper):
 class IRPactValWrapperRMSESingleVariable(AbstractWrapper):
 
     def maximum_decision_variable_values(self):
-        return configuration.optimizationBounds['maxAdoptionThreshold']
+        return [configuration.optimizationBounds['maxAdoptionThreshold']]
 
     def minimum_decision_variable_values(self):
-        return configuration.optimizationBounds['minAdoptionThreshold']
+        return [configuration.optimizationBounds['minAdoptionThreshold']]
 
     def objective_function_value(self, decision_variable_values):
             simulationRunner.prepareJsonDefaultIT(configuration.templateFile, decision_variable_values, configuration.defaultInterestThreshold)
