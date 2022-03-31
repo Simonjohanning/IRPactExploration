@@ -6,12 +6,10 @@ import sys
 # given in the input file
 def invokeJar(inputFile, modeParameters):
     try:
-        print('attempting to run jar')
         data = check_output(
             ['java', '-jar', 'src/resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', inputFile + '.json', '-o', 'example-output.json',
              '--noConsole', '--logPath', 'log.log', '--calculatePerformance', modeParameters])
         t = 0, data.decode('utf-8').rstrip()
-        print('jar call successful')
         return data
     except CalledProcessError as e:
         print('ran into exception for jar call')
@@ -20,7 +18,7 @@ def invokeJar(inputFile, modeParameters):
 
 # mock function to test the rest of the module
 def mockInvokeJar(AT, IT):
-    if(AT > 0):
+    if(AT > 0 and IT > 0):
         return (1/(AT*IT))
     else:
         return 999999
