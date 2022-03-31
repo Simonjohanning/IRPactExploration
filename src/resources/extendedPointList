@@ -1,0 +1,11 @@
+{"AT": 0.0, "IT": 0, "error": 120.97692617464982, "maxDistance": 0.671875, "neighborQ1": { "AT": 0.25, "IT": 32.0}}
+{"AT": 0.0, "IT": 86, "error": 121.2641, "maxDistance": 0.671875, "neighborQ1": { "AT": 0.5, "IT": 107.0},  "neighborQ2": { "AT": 0.0, "IT": 128}, "neighborQ4": { "AT": 0.5, "IT": 64.0}}
+{"AT": 0.0, "IT": 128, "error": 120.6903752031067, "maxDistance": 0.6640625, "neighborQ1": { "AT": 0.5, "IT": 128.0}, "neighborQ3": { "AT": 0.0, "IT": 86}, "neighborQ4": { "AT": 0.5, "IT": 107.0}}
+{"AT": 1.0, "IT": 0, "error": 121.27173344738392, "maxDistance": 0.5, "neighborQ1": { "AT": 1.0, "IT": 64.0},  "neighborQ2": { "AT": 0.5, "IT": 0.0}}
+{"AT": 1.0, "IT": 128, "error": 120.97761500927905, "maxDistance": 0.6640625,  "neighborQ2": { "AT": 0.5, "IT": 128.0}, "neighborQ3": { "AT": 0.5, "IT": 107.0}, "neighborQ4": { "AT": 1.0, "IT": 64.0}}
+{"AT": 0.5, "IT": 64.0, "error": 30.583333333333336, "maxDistance": 0.671875, "neighborQ1": { "AT": 0.5, "IT": 107.0},  "neighborQ2": { "AT": 0.0, "IT": 86}, "neighborQ3": { "AT": 0.25, "IT": 32.0}, "neighborQ4": { "AT": 0.5, "IT": 0.0}}
+{"AT": 0.5, "IT": 107.0, "error": 28.58333333333333, "maxDistance": 0.6640625, "neighborQ1": { "AT": 0.5, "IT": 128.0},  "neighborQ2": { "AT": 0.0, "IT": 128}, "neighborQ3": { "AT": 0.0, "IT": 86}, "neighborQ4": { "AT": 0.5, "IT": 64.0}}
+{"AT": 0.25, "IT": 32.0, "error": 35.666666666666664, "maxDistance": 0.671875, "neighborQ1": { "AT": 0.5, "IT": 64.0},  "neighborQ2": { "AT": 0.0, "IT": 86}, "neighborQ3": { "AT": 0.0, "IT": 0}, "neighborQ4": { "AT": 0.5, "IT": 0.0}}
+{"AT": 0.5, "IT": 0.0, "error": 31.750000000000007, "maxDistance": 0.5, "neighborQ1": { "AT": 0.5, "IT": 0.0},  "neighborQ2": { "AT": 0.0, "IT": 0}}
+{"AT": 0.5, "IT": 128.0, "error": 29.75, "maxDistance": 0.828125, "neighborQ1": { "AT": 1.0, "IT": 128},  "neighborQ2": { "AT": 0.0, "IT": 128}, "neighborQ3": { "AT": 0.0, "IT": 86}, "neighborQ4": { "AT": 0.5, "IT": 107.0}}
+{"AT": 1.0, "IT": 64.0, "error": 2.75, "maxDistance": 1.0, "neighborQ1": { "AT": 1.0, "IT": 128},  "neighborQ2": { "AT": 0.5, "IT": 64.0}, "neighborQ3": { "AT": 0.25, "IT": 32.0}, "neighborQ4": { "AT": 1.0, "IT": 0}}

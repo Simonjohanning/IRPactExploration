@@ -1,0 +1,7 @@
+{"AT": 0.0, "IT": 0, "error": 120.97692617464982, "maxDistance": 1.0, "neighborQ1": {"AT": 1.0, "IT": 0} }
+{"AT": 0.0, "IT": 86, "error": 121.2641, "maxDistance": 1.67, "neighborQ1": {"AT": 1.0, "IT": 128}, "neighborQ2": {"AT": 0.0, "IT": 128}, "neighborQ4": {"AT": 1.0, "IT": 0.0}}
+{"AT": 0.0, "IT": 128, "error": 120.6903752031067, "maxDistance": 1.0, "neighborQ1": { "AT": 1.0, "IT": 128}, "neighborQ3": { "AT": 0.0, "IT": 86 } }
+{"AT": 1.0, "IT": 0, "error": 121.27173344738392, "maxDistance": 2.0, "neighborQ1": { "AT": 1.0, "IT": 128 }, "neighborQ2": { "AT": 0.0, "IT": 128 } }
+{"AT": 1.0, "IT": 128, "error": 120.97761500927905,  "maxDistance": 1.67, "neighborQ2": { "AT": 0.0, "IT": 128 }, "neighborQ3": {"AT": 0.0, "IT": 86 }, "neighborQ4": { "AT": 1.0, "IT": 0 } }
+--
+{"AT": 0.5, "IT": 64.0, "error": 30.83333333333333, "maxDistance": 1.0, "neighborQ1": { "AT": 1.0, "IT": 128},  "neighborQ2": { "AT": 0.0, "IT": 86}, "neighborQ3": { "AT": 0.0, "IT": 0}, "neighborQ4": { "AT": 1.0, "IT": 0}}
