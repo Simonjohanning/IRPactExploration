@@ -66,4 +66,4 @@ defaultInterestThreshold = 22
 
 pointListFile = 'src/resources/pointList'
 templateFile = 'src/modelInputFiles/changedInterest'
-shellFlag = True
+shellFlag = False

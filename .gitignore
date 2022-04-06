@@ -2,7 +2,6 @@
 images
 settings_*
 src/modelInputFiles
-src/resources
 **/example-output.json
 *.log
 venv
