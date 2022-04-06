@@ -2,6 +2,7 @@ import numpy as np
 import math
 import simulationRunner
 import configuration
+import os
 
 # function to set up the simulation runs of the current iteration level
 # calculates the parameters for equidistant sampling in the respective parameter region
@@ -17,9 +18,9 @@ def calculateGrid(searchParameters, minAT, maxAT, minIT, maxIT):
             currentAT = minAT + ((maxAT-minAT)/(searchParameters['resolution']-1))*row
             currentIT = round(minIT + ((maxIT-minIT)/(searchParameters['resolution']-1))*col)
             if(searchParameters['printFlag']): print('calculating for IT '+str(currentIT)+' and AT '+str(currentAT))
-            simulationRunner.prepareJson('src/modelInputFiles/changedInterest', currentAT, currentIT)
+            simulationRunner.prepareJson('src/modelInputFiles/changedInterest', currentAT, currentIT, searchParameters['AP'], searchParameters['IP'])
             # add the performance of the run to the list
-            list[col][row] = float(simulationRunner.invokeJar("src/modelInputFiles/changedInterest-" + str(currentAT)[2:len(str(currentAT))] + "-" + str(currentIT), searchParameters['errorDefinition']))
+            list[col][row] = float(simulationRunner.invokeJar(os.getcwd() + "\src\modelInputFiles\changedInterest-" + str(currentAT)[2:len(str(currentAT))] + "-" + str(currentIT), searchParameters['errorDefinition'], configuration.shellFlag))
             if(searchParameters['printFlag']): print('Calculating for index ' + str(row*searchParameters['resolution']+col) + ' with row ' + str(row) + ' and column ' + str(col))
     #        list[col][row] = mockInvokeJar(currentAT, currentIT)
             if(searchParameters['printFlag']): print('Performance of run ' + str(row*searchParameters['resolution']+col) + ': ' + str(list[col][row]))
@@ -76,15 +77,20 @@ def nextDepthSearchIteration(searchParameters, searchState):
             print('Best index found at ' + str(currentMinIndex) + ' with AT ' + str(correspondingAT) + ' and IT ' + str(correspondingIT))
             newATRadius = (searchState['upperBoundAT'] - searchState['lowerBoundAT'])/(searchParameters['scaleFactor']*2)
             newITRadius = (searchState['upperBoundIT'] - searchState['lowerBoundIT']) / (searchParameters['scaleFactor'] * 2)
-            newLowerBoundAT = max(correspondingAT-newATRadius, 0)
-            newUpperBoundAT = min(correspondingAT+newATRadius, 1)
-            newLowerBoundIT = math.floor(max(correspondingIT-newITRadius, 0))
-            newUpperBoundIT = math.ceil(min(correspondingIT+newITRadius, configuration.maxInterestThreshold))
+            newLowerBoundAT = max(correspondingAT-newATRadius, configuration.optimizationBounds['minAdoptionThreshold'])
+            newUpperBoundAT = min(correspondingAT+newATRadius, configuration.optimizationBounds['maxAdoptionThreshold'])
+            newLowerBoundIT = math.floor(max(correspondingIT-newITRadius, configuration.optimizationBounds['minInterestThreshold']))
+            newUpperBoundIT = math.ceil(min(correspondingIT+newITRadius, configuration.optimizationBounds['maxInterestThreshold']))
             print('new search in the bound of [' + str(newLowerBoundAT) + ', '+ str(newUpperBoundAT)+'] (AT) and [' + str(newLowerBoundIT) + ', '+ str(newUpperBoundIT)+']  (IT)')
+            print('search state is ' + str(searchState))
+            print('with evaluation data ' + str(searchState['evaluationData']))
+            print('resultDic is ' + str(resultDic))
+            searchState['evaluationData'].append(resultDic)
+            print('appended version ' + str(searchState['evaluationData']))
             return nextDepthSearchIteration(searchParameters, {
                 'currentDelta': gridResultList[currentMinIndex],
                 'currentRecursionDepth': searchState['currentRecursionDepth'] + 1,
-                "evaluationData": searchState['evaluationData'].append(resultDic),
+                "evaluationData": searchState['evaluationData'],
                 "lowerBoundAT": newLowerBoundAT,
                 "upperBoundAT": newUpperBoundAT,
                 "lowerBoundIT": newLowerBoundIT,
@@ -95,7 +101,7 @@ def nextDepthSearchIteration(searchParameters, searchState):
 # equidistantly until close enough to the reference time series or a given number of iterations are reached
 # initializes the first call with relatively broad parameters
 # returns the state of the iteration that terminates the search
-def iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, errorDefinition):
+def iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, errorDefinition, AP, IP):
     print(f"Running simulation with parameters \n acceptableDelta: {acceptableDelta} \n maxDepth {maxDepth} \n scaleFactor {scaleFactor} \n resolution {resolution} \n errorDefinition {errorDefinition} ")
     # clean the folder of former modelInputFiles
     #check_output(['rm', 'src/modelInputFiles/*.json', '-r'], shell=True)
@@ -105,13 +111,15 @@ def iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, e
         'scaleFactor': float(scaleFactor),
         'resolution': int(resolution),
         'printFlag': True,
-        'errorDefinition': errorDefinition
+        'errorDefinition': errorDefinition,
+        'AP': AP,
+        'IP': IP
     }, {
         'currentDelta': 999999,
         'currentRecursionDepth': 0,
         "evaluationData": [],
-        "lowerBoundAT": 0.5,
-        "upperBoundAT": 0.8,
-        "lowerBoundIT": 1,
-        "upperBoundIT": 86
+        "lowerBoundAT": configuration.optimizationBounds['minAdoptionThreshold'],
+        "upperBoundAT": configuration.optimizationBounds['maxAdoptionThreshold'],
+        "lowerBoundIT": configuration.optimizationBounds['minInterestThreshold'],
+        "upperBoundIT": configuration.optimizationBounds['maxInterestThreshold']
     })

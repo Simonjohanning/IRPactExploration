@@ -1,8 +1,10 @@
 gds_defaults = {
     'maxDepth':  2,
     'scaleFactor': 2,
-    'resolution': 3,
-    'acceptableDelta': 1.2
+    'resolution': 1,
+    'acceptableDelta': 1.2,
+    'AP': 5,
+    'IP': 1
 }
 
 harmony_defaults = {
@@ -49,18 +51,19 @@ geneticAlgorithm_default = {
 }
 
 optimizationBounds = {
-    'minInterestThreshold': 0,
+    'minInterestThreshold': 1,
     'maxInterestThreshold': 128,
-    'minAdoptionThreshold': 0.0,
+    'minAdoptionThreshold': 0,
     'maxAdoptionThreshold': 1.0
 }
 
 optimizationStartValues = {
-    'adoptionThreshold': 0.7,
-    'interestThreshold': 25
+    'adoptionThreshold': 0.8,
+    'interestThreshold': 12
 }
 
 defaultInterestThreshold = 22
 
 pointListFile = 'src/resources/pointList'
 templateFile = 'src/modelInputFiles/changedInterest'
+shellFlag = True

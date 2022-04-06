@@ -3,6 +3,7 @@ import configuration
 import simulationRunner
 import neighborRefiningSearch
 import IRPactValWrapper
+import dataVisualization
 from metaheuristic_algorithms.harmony_search import HarmonySearch
 from metaheuristic_algorithms.firefly_algorithm import FireflyAlgorithm
 from metaheuristic_algorithms.simplified_particle_swarm_optimization import SimplifiedParticleSwarmOptimization
@@ -31,6 +32,10 @@ def setParameters(opts):
             parameters['IT'] = a
         elif o == '--method':
             parameters['method'] = a
+        elif o == '--AP':
+            parameters['AP'] = a
+        elif o == '--IP':
+            parameters['IP'] = a
         elif o == '--maximum_attempt':
             parameters['maximum_attempt'] = a
         elif o == '--pitch_adjusting_range':
@@ -116,8 +121,12 @@ def runOptimization(errorDefinition, optimizationMethod, parameters):
             'resolution']
         acceptableDelta = parameters['acceptableDelta'] if ('acceptableDelta' in parameters) else \
         configuration.gds_defaults['acceptableDelta']
-        print(
-            gridDepthSearch.iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, errorDefinition))
+        AP = parameters['AP'] if ('AP' in parameters) else configuration.gds_defaults['AP']
+        IP = parameters['IP'] if ('IP' in parameters) else configuration.gds_defaults['IP']
+        optimizationResult = gridDepthSearch.iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, errorDefinition, AP, IP)
+        print(optimizationResult)
+        saveAndPlotEvaluationData(optimizationResult['evaluationData'], AP, IP)
+
     elif (optimizationMethod == 'singleRun'):
         if ('AT' in parameters and 'IT' in parameters):
             baseInputFile = 'src/modelInputFiles/changedInterest'
@@ -269,3 +278,12 @@ def runOptimization(errorDefinition, optimizationMethod, parameters):
             print(result["best_objective_function_value"])  # f(x,y) value: Example: 0.0563
     else:
         print('method ' + optimizationMethod + ' is not known. Please provide a valid method')
+
+def saveAndPlotEvaluationData(evaluationData, AP, IP):
+    print('saving and plotting')
+    file = open('src/resources/gridDepthSearch-' + str(AP) + str(IP) + '0', "w")
+    for i in range(len(evaluationData)):
+        for j in range(len(evaluationData[i])):
+            file.write(str(evaluationData[i][j])+'\n')
+    file.close()
+    dataVisualization.visualizeData('trisurf', 'src/resources/gridDepthSearch-' + str(AP) + str(IP) + '0')
