@@ -37,7 +37,7 @@
             "sca_InSpecialPVactInput_reno2012": 0.00341602718688205,
             "sca_InSpecialPVactInput_const2016": 0.00497070832593645,
             "sca_InSpecialPVactInput_useRenoRates": 1,
-            "sca_InGeneral_innerParallelism": 8,
+            "sca_InGeneral_innerParallelism": 1,
             "sca_InSpecialPVactInput_const2020": 0.0044289612161372,
             "sca_InGraphvizGeneral_keepAspectRatio": 1,
             "sca_InGeneral_levelOff": 0,
@@ -1080,6 +1080,38 @@
                 "par_InComparedAnnualZipImage_customImageId": 0
               }
             },
+            "set_InComparedCumulatedAnnualImage" : {
+              "JaehrlicheKumulierteAdoptionenVergleich" : {
+                "par_InComparedCumulatedAnnualImage_enabled" : 1,
+                "par_InComparedCumulatedAnnualImage_useGnuplot" : 1,
+                "par_InComparedCumulatedAnnualImage_useR" : 0,
+                "par_InComparedCumulatedAnnualImage_storeScript" : 1,
+                "par_InComparedCumulatedAnnualImage_storeData" : 1,
+                "par_InComparedCumulatedAnnualImage_storeImage" : 1,
+                "par_InComparedCumulatedAnnualImage_imageWidth" : 1280,
+                "par_InComparedCumulatedAnnualImage_imageHeight" : 720,
+                "par_InComparedCumulatedAnnualImage_linewidth" : 1,
+                "par_InComparedCumulatedAnnualImage_skipInvalidZips" : 1,
+                "par_InComparedCumulatedAnnualImage_showPreYear" : 1,
+                "par_InComparedCumulatedAnnualImage_customImageId" : 0
+              }
+            },
+            "set_InComparedCumulatedAnnualZipImage" : {
+              "JaehrlicheKumulierteAdoptionenPLZVergleich" : {
+                "par_InComparedCumulatedAnnualZipImage_enabled" : 1,
+                "par_InComparedCumulatedAnnualZipImage_useGnuplot" : 1,
+                "par_InComparedCumulatedAnnualZipImage_useR" : 0,
+                "par_InComparedCumulatedAnnualZipImage_storeScript" : 1,
+                "par_InComparedCumulatedAnnualZipImage_storeData" : 1,
+                "par_InComparedCumulatedAnnualZipImage_storeImage" : 1,
+                "par_InComparedCumulatedAnnualZipImage_imageWidth" : 1280,
+                "par_InComparedCumulatedAnnualZipImage_imageHeight" : 720,
+                "par_InComparedCumulatedAnnualZipImage_linewidth" : 1,
+                "par_InComparedCumulatedAnnualZipImage_skipInvalidZips" : 1,
+                "par_InComparedCumulatedAnnualZipImage_showPreYear" : 1,
+                "par_InComparedCumulatedAnnualZipImage_customImageId" : 0
+              }
+            },
             "set_InLoggingResultImage2": {
               "Adoptionsphasenuebersicht": {},
               "Interessensentwicklung": {},
@@ -1094,6 +1126,8 @@
               "NOV_Buckets": {},
               "ENV_Quantile": {},
               "JaehrlicheAdoptionenVergleich": {},
+              "JaehrlicheKumulierteAdoptionenPLZVergleich" : { },
+              "JaehrlicheKumulierteAdoptionenVergleich" : { },
               "LOCAL_Buckets": {},
               "JaehrlicheAdoptionenPLZVergleich": {},
               "Prozessmodellphasenuebersicht": {},
@@ -1147,6 +1181,8 @@
               "LOCAL_Buckets": {},
               "JaehrlicheAdoptionenPLZVergleich": {},
               "Prozessmodellphasenuebersicht": {},
+              "JaehrlicheKumulierteAdoptionenPLZVergleich" : { },
+              "JaehrlicheKumulierteAdoptionenVergleich" : { },
               "UTILITY_Buckets": {},
               "JaehrlichesKumuliertesInteresse": {},
               "LOCAL_Quantile": {},
@@ -15341,6 +15377,28 @@
               "JaehrlicheAdoptionenMilieu": {
                 "CD_UL_PALETTE": 0,
                 "CD_UL_PALETTE_v2": 1
+              }
+            },
+            "par_link_InComparedCumulatedAnnualImage_InColorPalette_colorPalette" : {
+              "JaehrlicheKumulierteAdoptionenVergleich" : {
+                "CD_UL_PALETTE" : 0.0,
+                "CD_UL_PALETTE_v2" : 1.0
+              }
+            },
+            "par_link_InComparedCumulatedAnnualImage_InRealAdoptionDataFile_realData" : {
+              "JaehrlicheKumulierteAdoptionenVergleich" : {
+                "PV_Diffusion_L" : 1.0
+              }
+            },
+            "par_link_InComparedCumulatedAnnualZipImage_InColorPalette_colorPalette" : {
+              "JaehrlicheKumulierteAdoptionenPLZVergleich" : {
+                "CD_UL_PALETTE" : 0.0,
+                "CD_UL_PALETTE_v2" : 1.0
+              }
+            },
+            "par_link_InComparedCumulatedAnnualZipImage_InRealAdoptionDataFile_realData" : {
+              "JaehrlicheKumulierteAdoptionenPLZVergleich" : {
+                "PV_Diffusion_L" : 1.0
               }
             },
             "par_link_InMulScalarModule3_calcnode3_InConsumerAgentCalculationModule2_inputModule": {
