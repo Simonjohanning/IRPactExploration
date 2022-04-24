@@ -24,6 +24,7 @@ def aggregateData(data, specialMode=None):
         print('hasntAttr')
         print(dictData)
 
+
 # function to run the (repo-based current) version of the model instance with the conversation
 # given in the input file
 def invokeJar(inputFile, modeParameters, shelLFlag):
@@ -59,6 +60,7 @@ def mockInvokeJar(AT, IT):
 # function that manipulates the scenario definition to fit the adoption and interest threshold for the desired run
 # file is saved in the path and prefix specified by the templateFile parameter
 def prepareJson(templateFile, adoptionThreshold, interestThreshold, AP, IP):
+    navigateToTop()
     f = open('src/resources/example-input.json', "r")
     fileData = json.loads(f.read())
     fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['INTEREST_THRESHOLD'][
