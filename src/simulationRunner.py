@@ -3,6 +3,16 @@ import json
 import sys
 import os
 
+def navigateToTop():
+    currentDir = os.getcwd().split('\\')[-1]
+    print(currentDir)
+    if (currentDir == 'C:\\'):
+        os.chdir('Users\mai11dlx\PycharmProjects\IRPactExploration')
+    elif (not currentDir == 'IRPactExploration'):
+        print('current dir is ' + os.getcwd() + '; navigating up')
+        os.chdir('../')
+        navigateToTop()
+
 def aggregateData(data, specialMode=None):
     dictData = eval(data)
     if(specialMode):

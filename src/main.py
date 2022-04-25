@@ -7,11 +7,6 @@ import simulationRunner
 import json
 
 
-def navigateToTop():
-    currentDirArray = os.getcwd().split()[-1]
-    if (not currentDirArray == 'IRPactExploration'):
-        print('current dir is ' + os.getcwd() + '; navigating up')
-        os.chdir('../')
 
 def quickCheck():
     f = open('src/resources/example-input_old.json', "r")
@@ -79,7 +74,7 @@ def runAll(parameters):
 # main method to set up the logging and invoke the optimization management method function
 if __name__ == '__main__':
     #dataVisualization.visualizeData('trisurf', 'resources/gridDepthSearch-210-cumulativeAnnualAdoptionDelta-reduced')
-    navigateToTop()
+    simulationRunner.navigateToTop()
     #quickCheck()
     argv = sys.argv[1:]
     # include new parameters for MHs

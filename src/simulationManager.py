@@ -10,6 +10,8 @@ from metaheuristic_algorithms.simplified_particle_swarm_optimization import Simp
 from metaheuristic_algorithms.simulated_annealing import SimulatedAnnealing
 from metaheuristic_algorithms.genetic_algorithm import GeneticAlgorithm
 import matplotlib.pyplot as plt
+import os
+
 
 def setParameters(opts):
     print(opts)
