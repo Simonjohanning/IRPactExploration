@@ -97,6 +97,8 @@ def setParameters(opts):
             parameters['mutation_probability'] = a
         elif o == '--runFile':
             parameters['runFile'] = a
+        elif o == '--noRuns':
+            parameters['noRuns'] = a
         else:
             print('unrecognized parameter ' + str(a))
     return parameters
@@ -131,67 +133,17 @@ def runOptimization(errorDefinition, optimizationMethod, parameters, plotFlag):
         optimizationResult = gridDepthSearch.iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, errorDefinition, AP, IP)
         print(optimizationResult)
         saveAndPlotEvaluationData(optimizationResult['evaluationData'], AP, IP, errorDefinition, plotFlag)
-
-    elif (optimizationMethod == 'singleRun'):
-        if ('AT' in parameters and 'IT' in parameters):
-            baseInputFile = 'src/modelInputFiles/changedInterest'
-            simulationRunner.prepareJson(baseInputFile, parameters['AT'], parameters['IT'], parameters['AP'], parameters['IP'])
-            simulationRunner.invokeJar(
-                baseInputFile + '-' + str(parameters['AT'])[2:len(str(parameters['AT']))] + '-' + str(parameters['IT']),
-                parameters['errorDef'], True)
+    elif (optimizationMethod == 'multipleRuns'):
+        if ('AT' in parameters and 'IT' in parameters and 'noRuns' in parameters):
+            for index in range(int(parameters['noRuns'])):
+                runAndPlot({'adoptionThreshold': parameters['AT'], 'interestThreshold': parameters['IT']}, parameters, errorDefinition, 'run' + str(index))
+                print('written out in file plots/' + errorDefinition + '-' + str(parameters['AP']) + '-' + str(parameters['IP']) + '-' + str(parameters['AP']) + '-' + str(parameters['IT']) + '-runError-' + str(index) + '.png')
     elif (optimizationMethod == 'plotRuns'):
         if ('runFile' in parameters):
             # go through all runs in file and do single runs with consecutive plot
             with open('src/' + parameters['runFile'], 'r') as file:
                 for line in file:
-                    runDict = eval(line)
-                    print('read line ' + str(runDict))
-                    baseInputFile = 'src/modelInputFiles/changedInterest'
-                    print('running with configuration AP: ' + str(runDict['adoptionThreshold']) + ', IP: ' + str(
-                        runDict['interestThreshold']) + ', AP: ' + str(parameters['AP']) + ', IP: ' + str(
-                        parameters['IP']))
-                    simulationRunner.prepareJson(baseInputFile, runDict['adoptionThreshold'], runDict['interestThreshold'], parameters['AP'],
-                                                 parameters['IP'])
-                    error = float(simulationRunner.invokeJar(
-                        baseInputFile + '-' + str(runDict['adoptionThreshold'])[2:len(str(runDict['adoptionThreshold']))] + '-' + str(
-                            runDict['interestThreshold']),
-                        parameters['errorDef'], True))
-                    print('finished run with configuration AP: ' + str(runDict['adoptionThreshold']) + ', IP: ' + str(runDict['interestThreshold']) + ', AP: ' + str(parameters['AP']) + ', IP: ' + str(parameters['IP']))
-                    with open('images/JaehrlicheKumulierteAdoptionenVergleich-data.csv', 'r') as adoptionsFile:
-                        years = []
-                        modelResults = []
-                        realAdoptions = []
-                        i = 0
-                        for yearlyData in adoptionsFile:
-                            # print('line ' + str(yearlyData))
-                            if(i > 0):
-                                dataArray = yearlyData.split(';')
-                                # print(str(dataArray) + ' with length ' + str(len(dataArray)))
-                                # print('year ' + str(int(dataArray[0])) + ', model: ' + str(float(dataArray[1])) + ', real: ' + str(
-                                #     float(dataArray[2].strip())) + ', i: ' + str(i))
-                                years.append(int(dataArray[0]))
-                                modelResults.append(float(dataArray[1]))
-                                realAdoptions.append(float(dataArray[2].strip()))
-                                # print(str(years))
-                                # print(str(modelResults))
-                                # print(str(realAdoptions))
-                                # print('year ' + str(years[i-1]) + ', model: ' + str(modelResults[i-1]) + ', real: ' + str(realAdoptions[i-1]) + ', i: ' + str(i))
-                                i += 1
-                            else:
-                                i = 1
-                        # print(str(years))
-                        # print(str(modelResults))
-                        # print(str(realAdoptions))
-                        simulation = plt.plot(years, modelResults, label = "Simulationsergebnisse", color="#b02f2c")
-                        realData = plt.plot(years, realAdoptions, label= "Tatsächliche Adoptionen", color="#8ac2d1")
-                        plt.ylabel('Installierte Anlagen')
-                        plt.xlabel('Jahre')
-                        plt.legend(handles=[simulation[0], realData[0]])
-                        #plt.show()
-                        plt.savefig('plots/' + errorDefinition + '-' + str(parameters['AP']) + '-' + str(
-                        parameters['IP']) + '-' + str(runDict['adoptionThreshold']) + '-' + str(
-                        runDict['interestThreshold']) + '-' + str(error) + '.png', bbox_inches='tight')
-                        plt.clf()
+                    runAndPlot(eval(line), parameters, errorDefinition, '')
     elif (optimizationMethod == 'neighborRefiningSearch'):
         neighborRefiningSearch.neighborRefining(errorDefinition)
     elif (optimizationMethod == 'harmonySearch'):
@@ -346,3 +298,54 @@ def saveAndPlotEvaluationData(evaluationData, AP, IP, errorDefinition, plotFlag)
     file.close()
     if(plotFlag):
         dataVisualization.visualizeData('trisurf', 'src/resources/gridDepthSearch-' + str(AP) + str(IP) + '0-' + errorDefinition)
+
+def runAndPlot(runDict, parameters, errorDefinition, nameAppend):
+    baseInputFile = 'src/modelInputFiles/changedInterest'
+    print('running with configuration AP: ' + str(runDict['adoptionThreshold']) + ', IP: ' + str(
+        runDict['interestThreshold']) + ', AP: ' + str(parameters['AP']) + ', IP: ' + str(
+        parameters['IP']))
+    simulationRunner.prepareJson(baseInputFile, runDict['adoptionThreshold'], runDict['interestThreshold'],
+                                 parameters['AP'],
+                                 parameters['IP'])
+    returnData = simulationRunner.invokeJar(
+        baseInputFile + '-' + str(runDict['adoptionThreshold'])[2:len(str(runDict['adoptionThreshold']))] + '-' + str(
+            runDict['interestThreshold']),
+        parameters['errorDef'], True)
+    print('finished run with configuration AP: ' + str(runDict['adoptionThreshold']) + ', IP: ' + str(
+        runDict['interestThreshold']) + ', AP: ' + str(parameters['AP']) + ', IP: ' + str(parameters['IP']) + ' and error ' + str(returnData))
+    simulationRunner.navigateToTop()
+    with open('images/JaehrlicheKumulierteAdoptionenVergleich-data.csv', 'r') as adoptionsFile:
+        years = []
+        modelResults = []
+        realAdoptions = []
+        i = 0
+        for yearlyData in adoptionsFile:
+            # print('line ' + str(yearlyData))
+            if (i > 0):
+                dataArray = yearlyData.split(';')
+                # print(str(dataArray) + ' with length ' + str(len(dataArray)))
+                # print('year ' + str(int(dataArray[0])) + ', model: ' + str(float(dataArray[1])) + ', real: ' + str(
+                #     float(dataArray[2].strip())) + ', i: ' + str(i))
+                years.append(int(dataArray[0]))
+                modelResults.append(float(dataArray[1]))
+                realAdoptions.append(float(dataArray[2].strip()))
+                # print(str(years))
+                # print(str(modelResults))
+                # print(str(realAdoptions))
+                # print('year ' + str(years[i-1]) + ', model: ' + str(modelResults[i-1]) + ', real: ' + str(realAdoptions[i-1]) + ', i: ' + str(i))
+                i += 1
+            else:
+                i = 1
+        # print(str(years))
+        # print(str(modelResults))
+        # print(str(realAdoptions))
+        simulation = plt.plot(years, modelResults, label="Simulationsergebnisse", color="#b02f2c")
+        realData = plt.plot(years, realAdoptions, label="Tatsächliche Adoptionen", color="#8ac2d1")
+        plt.ylabel('Installierte Anlagen')
+        plt.xlabel('Jahre')
+        plt.legend(handles=[simulation[0], realData[0]])
+        # plt.show()
+        plt.savefig('plots/' + errorDefinition + '-' + str(parameters['AP']) + '-' + str(
+            parameters['IP']) + '-' + str(runDict['adoptionThreshold']) + '-' + str(
+            runDict['interestThreshold']) + '-' + str(returnData) + '-' + nameAppend + '.png', bbox_inches='tight')
+        plt.clf()

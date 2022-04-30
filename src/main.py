@@ -73,12 +73,12 @@ def runAll(parameters):
 
 # main method to set up the logging and invoke the optimization management method function
 if __name__ == '__main__':
-    #dataVisualization.visualizeData('trisurf', 'resources/gridDepthSearch-210-cumulativeAnnualAdoptionDelta-reduced')
+    #dataVisualization.visualizeData('trisurf', 'resources/gridDepthSearch-310-RMSD-reduced')
     simulationRunner.navigateToTop()
     #quickCheck()
     argv = sys.argv[1:]
     # include new parameters for MHs
-    opts, args = getopt.getopt(argv, 'd:e:msr', ['acceptableDelta=', 'delta=', 'errorDef=', 'maxDepth=', 'scaleFactor=', 'resolution=', 'AT=', 'IT=', 'method=', 'AP=', 'IP=', 'runFile='])
+    opts, args = getopt.getopt(argv, 'd:e:msr', ['acceptableDelta=', 'delta=', 'errorDef=', 'maxDepth=', 'scaleFactor=', 'resolution=', 'AT=', 'IT=', 'method=', 'AP=', 'IP=', 'runFile=', 'noRuns='])
     print(opts)
     parameters = simulationManager.setParameters(opts)
     # TODO make safe

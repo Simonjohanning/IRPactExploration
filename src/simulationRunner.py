@@ -5,7 +5,7 @@ import os
 
 def navigateToTop():
     currentDir = os.getcwd().split('\\')[-1]
-    print(currentDir)
+    #print(currentDir)
     if (currentDir == 'C:\\'):
         os.chdir('Users\mai11dlx\PycharmProjects\IRPactExploration')
     elif (not currentDir == 'IRPactExploration'):
@@ -51,6 +51,7 @@ def invokeJar(inputFile, modeParameters, shelLFlag):
             data = check_output(
                 ['java', '-jar', 'src/resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', inputFile + '.json', '-o', 'example-output.json',
                  '--noConsole', '--logPath', 'log.log', '--calculatePerformance', modeParameters, '--gnuplotCommand', 'C:/Users/mai11dlx/gnuplot/bin/gnuplot.exe'], shell=shelLFlag).decode('utf-8').rstrip()
+            print(data)
             if (len(data.split('{')) > 1):
                 return aggregateData(data)
             else:
@@ -74,9 +75,9 @@ def prepareJson(templateFile, adoptionThreshold, interestThreshold, AP, IP):
     f = open('src/resources/example-input.json', "r")
     fileData = json.loads(f.read())
     fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['INTEREST_THRESHOLD'][
-        'par_InDiracUnivariateDistribution_value'] = interestThreshold
+        'par_InDiracUnivariateDistribution_value'] = int(interestThreshold)
     fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['ADOPTION_THRESHOLD'][
-        'par_InDiracUnivariateDistribution_value'] = adoptionThreshold
+        'par_InDiracUnivariateDistribution_value'] = float(adoptionThreshold)
     fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
         'par_InCommunicationModule3_actionnode3_adopterPoints'] = int(AP)
     fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
