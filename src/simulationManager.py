@@ -1,3 +1,6 @@
+import math
+import numpy as np
+
 import gridDepthSearch
 import configuration
 import simulationRunner
@@ -10,9 +13,17 @@ from metaheuristic_algorithms.simplified_particle_swarm_optimization import Simp
 from metaheuristic_algorithms.simulated_annealing import SimulatedAnnealing
 from metaheuristic_algorithms.genetic_algorithm import GeneticAlgorithm
 import matplotlib.pyplot as plt
-import os
+from matplotlib import cm
+import json
+import random
 
+# TODO package a bunch of more concrete stuff here in a library and separate setup and execution
 
+# module to initialize the optimization process and set the parameters.
+# Serves to isolate the functionality of the individual optimization methods from the data
+
+# Function that sets the parameter map based on the inline parameters the script was invoked with.
+# The function reads the inline parameters and assigns them to the respective parameter
 def setParameters(opts):
     print(opts)
     parameters = {}
@@ -99,14 +110,39 @@ def setParameters(opts):
             parameters['runFile'] = a
         elif o == '--noRuns':
             parameters['noRuns'] = a
+        elif o == '--noRepetitions':
+            parameters['noRepetitions'] = a
+        elif o == '--scenarioList':
+            parameters['scenarioList'] = a
+        elif o == '--lowerBoundAT':
+            parameters['lowerBoundAT'] = a
+        elif o == '--upperBoundAT':
+         parameters['upperBoundAT'] = a
+        elif o == '--lowerBoundIT':
+            parameters['lowerBoundIT'] = a
+        elif o == '--upperBoundIT':
+            parameters['upperBoundIT'] = a
+        elif o == '--inputFile':
+            parameters['inputFile'] = a
         else:
-            print('unrecognized parameter ' + str(a))
+            print('unrecognized parameter ' + str(o))
     return parameters
 
 
-# module to initialize the optimization process and set the parameters.
-# Serves to isolate the functionality of the individual optimization methods from the data
-
+# Function that runs the parameter optimization based on the specified parameters.
+# Individual simulations will be evaluated based on the errorDefinition with given parameters
+# and are optimized based on the specified optimizationMethod.
+# If the plotFlag is set, optimization methods using it will plot results between runs.
+# Implemented optimization methods include:
+# gridDepthSearch,
+# multipleRuns,
+# plotRuns,
+# neighborRefiningSearch,
+# harmonySearch (from the metaheuristic algorithm package),
+# firefly (from the metaheuristic algorithm package),
+# SimplifiedParticleSwarmOptimization (from the metaheuristic algorithm package),
+# simulatedAnnealing (from the metaheuristic algorithm package),
+# geneticAlgorithm (from the metaheuristic algorithm package).
 def runOptimization(errorDefinition, optimizationMethod, parameters, plotFlag):
     number_of_variables = 2
     objective = "minimization"
@@ -130,9 +166,32 @@ def runOptimization(errorDefinition, optimizationMethod, parameters, plotFlag):
         configuration.gds_defaults['acceptableDelta']
         AP = parameters['AP'] if ('AP' in parameters) else configuration.gds_defaults['AP']
         IP = parameters['IP'] if ('IP' in parameters) else configuration.gds_defaults['IP']
-        optimizationResult = gridDepthSearch.iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, errorDefinition, AP, IP)
+        inputFile = parameters['inputFile'] if ('inputFile' in parameters) else configuration.gds_defaults['inputFile']
+        lowerBoundAT = parameters['lowerBoundAT'] if ('lowerBoundAT' in parameters) else configuration.optimizationBounds['minAdoptionThreshold']
+        upperBoundAT = parameters['upperBoundAT'] if ('upperBoundAT' in parameters) else configuration.optimizationBounds['maxAdoptionThreshold']
+        lowerBoundIT = parameters['lowerBoundIT'] if ('lowerBoundIT' in parameters) else configuration.optimizationBounds['minInterestThreshold']
+        upperBoundIT = parameters['upperBoundIT'] if ('upperBoundIT' in parameters) else configuration.optimizationBounds['maxInterestThreshold']
+        optimizationResult = gridDepthSearch.iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, errorDefinition, AP, IP, inputFile, lowerBoundAT, upperBoundAT, lowerBoundIT, upperBoundIT)
         print(optimizationResult)
-        saveAndPlotEvaluationData(optimizationResult['evaluationData'], AP, IP, errorDefinition, plotFlag)
+        saveAndPlotEvaluationData(optimizationResult['evaluationData'], 'src/resources/gridDepthSearch-' + str(AP) + str(IP) + '0-', errorDefinition, plotFlag)
+    # TODO check if only for debugging purposes / specific code
+    elif (optimizationMethod == 'pvactval'):
+        if ('noRepetitions' in parameters and 'scenarioList' in parameters and 'resolution' in parameters and 'lowerBoundAT' in parameters and 'upperBoundAT' in parameters and 'lowerBoundIT' in parameters and 'upperBoundIT' in parameters and 'AP' in parameters and 'IP' in parameters):
+            scenarioFiles = parameters['scenarioList'].split(',')
+            print('reading ' + str(len(scenarioFiles)) + ' scenarios files ')
+            #createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), int(parameters['resolution']), parameters['errorDef'], float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']), parameters['AP'], parameters['IP'])
+            analyseScenarioPerformance([[{46: {'Dresden_optimistic': 411, 'Dresden_pessimistic': 640}, 150: {'Dresden_optimistic': 372, 'Dresden_pessimistic': 614}}, {112: {'Dresden_optimistic': 370, 'Dresden_pessimistic': 609}, 142: {'Dresden_optimistic': 385, 'Dresden_pessimistic': 628}}, {192: {'Dresden_optimistic': 271, 'Dresden_pessimistic': 457}, 105: {'Dresden_optimistic': 225, 'Dresden_pessimistic': 361}}], [{208: {'Dresden_optimistic': 125, 'Dresden_pessimistic': 151}, 61: {'Dresden_optimistic': 128, 'Dresden_pessimistic': 204}}, {69: {'Dresden_optimistic': 36, 'Dresden_pessimistic': 53}, 3: {'Dresden_optimistic': 37, 'Dresden_pessimistic': 43}}, {141: {'Dresden_optimistic': 47, 'Dresden_pessimistic': 90}, 169: {'Dresden_optimistic': 32, 'Dresden_pessimistic': 41}}], [{22: {'Dresden_optimistic': 5, 'Dresden_pessimistic': 25}, 183: {'Dresden_optimistic': 2, 'Dresden_pessimistic': 10}}, {174: {'Dresden_optimistic': 4, 'Dresden_pessimistic': 13}, 138: {'Dresden_optimistic': 11, 'Dresden_pessimistic': 18}}, {78: {'Dresden_optimistic': 9, 'Dresden_pessimistic': 15}, 117: {'Dresden_optimistic': 8, 'Dresden_pessimistic': 9}}]], float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']), scenarioFiles)
+        else:
+            print(parameters)
+            print('noRepetitions' in parameters)
+            print('scenarioList' in parameters)
+            print('resolution' in parameters)
+            print('lowerBoundAT' in parameters)
+            print('upperBoundAT' in parameters)
+            print('lowerBoundIT' in parameters)
+            print('upperBoundIT' in parameters)
+            print('AP' in parameters)
+            print('IP' in parameters)
     elif (optimizationMethod == 'multipleRuns'):
         if ('AT' in parameters and 'IT' in parameters and 'noRuns' in parameters):
             for index in range(int(parameters['noRuns'])):
@@ -145,7 +204,7 @@ def runOptimization(errorDefinition, optimizationMethod, parameters, plotFlag):
                 for line in file:
                     runAndPlot(eval(line), parameters, errorDefinition, '')
     elif (optimizationMethod == 'neighborRefiningSearch'):
-        neighborRefiningSearch.neighborRefining(errorDefinition)
+        neighborRefiningSearch.neighborRefining(errorDefinition, parameters['inputFile'])
     elif (optimizationMethod == 'harmonySearch'):
         if optimizationWrapper is None:
             pass
@@ -289,22 +348,28 @@ def runOptimization(errorDefinition, optimizationMethod, parameters, plotFlag):
     else:
         print('method ' + optimizationMethod + ' is not known. Please provide a valid method')
 
-def saveAndPlotEvaluationData(evaluationData, AP, IP, errorDefinition, plotFlag):
+# Function to save the specified data into a file given by the prefix and the chosen error definition.
+# Will append to the specified file and plot the data if the plotFlag is set.
+def saveAndPlotEvaluationData(evaluationData, filePrefix, errorDefinition, plotFlag):
     print('saving and plotting')
-    file = open('src/resources/gridDepthSearch-' + str(AP) + str(IP) + '0-' + errorDefinition, "w")
+    file = open(filePrefix + errorDefinition, "w")
     for i in range(len(evaluationData)):
         for j in range(len(evaluationData[i])):
             file.write(str(evaluationData[i][j])+'\n')
     file.close()
     if(plotFlag):
-        dataVisualization.visualizeData('trisurf', 'src/resources/gridDepthSearch-' + str(AP) + str(IP) + '0-' + errorDefinition)
+        dataVisualization.visualizeData('trisurf', filePrefix + errorDefinition)
 
+# Function to execute a single run and to plot the results based on the cumulated adoptions
+# for the simulation and the reference data for the simulated years.
+# TODO tidy up, make more abstract and name properly
 def runAndPlot(runDict, parameters, errorDefinition, nameAppend):
-    baseInputFile = 'src/modelInputFiles/changedInterest'
+    baseInputFile = 'src/resources/scenario-dresden-full'
     print('running with configuration AP: ' + str(runDict['adoptionThreshold']) + ', IP: ' + str(
         runDict['interestThreshold']) + ', AP: ' + str(parameters['AP']) + ', IP: ' + str(
         parameters['IP']))
-    simulationRunner.prepareJson(baseInputFile, runDict['adoptionThreshold'], runDict['interestThreshold'],
+    # ToDo change back or make more elegant (randomness)
+    simulationRunner.prepareJsonRand(baseInputFile, runDict['adoptionThreshold'], runDict['interestThreshold'],
                                  parameters['AP'],
                                  parameters['IP'])
     returnData = simulationRunner.invokeJar(
@@ -339,13 +404,194 @@ def runAndPlot(runDict, parameters, errorDefinition, nameAppend):
         # print(str(years))
         # print(str(modelResults))
         # print(str(realAdoptions))
-        simulation = plt.plot(years, modelResults, label="Simulationsergebnisse", color="#b02f2c")
-        realData = plt.plot(years, realAdoptions, label="Tatsächliche Adoptionen", color="#8ac2d1")
-        plt.ylabel('Installierte Anlagen')
-        plt.xlabel('Jahre')
+        simulation = plt.plot(years, modelResults, label="Simulation results", color="#b02f2c")
+        realData = plt.plot(years, realAdoptions, label="Actual adoptions", color="#8ac2d1")
+        plt.ylabel('Installed PV systems')
+        plt.xlabel('Years')
         plt.legend(handles=[simulation[0], realData[0]])
         # plt.show()
         plt.savefig('plots/' + errorDefinition + '-' + str(parameters['AP']) + '-' + str(
             parameters['IP']) + '-' + str(runDict['adoptionThreshold']) + '-' + str(
             runDict['interestThreshold']) + '-' + str(returnData) + '-' + nameAppend + '.png', bbox_inches='tight')
         plt.clf()
+
+# Function to schedule, run and analyse a set of runs based on the parameters and scenarios provided
+# @TODO clean up and generalize
+def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lowBoundAT, highBoundAT, lowBoundIT, highBoundIT, AP, IP):
+    print('creating runs')
+    seedSet = set()
+    parameterPerformance = [[{} for col in range(granularity)] for row in range(granularity)]
+    for l in range(int(noRepetitions * math.pow(granularity, 2))):
+        currentSeed = random.randint(0, int(math.pow(noRepetitions, 2) * math.pow(granularity, 3) * 2))
+        while(currentSeed in seedSet):
+            currentSeed = random.randint(0, int(math.pow(noRepetitions, 2) * math.pow(granularity, 3) * 2))
+        seedSet.add(currentSeed)
+        #print('AT index ' + str(math.floor(l/noRepetitions) % granularity), 'IT index ' + str(math.floor(l/(noRepetitions * granularity))))
+        indexAT = (math.floor(l/noRepetitions) % granularity)
+        indexIT = (math.floor(l/(noRepetitions * granularity)))
+        currentAT = lowBoundAT + (indexAT * (highBoundAT - lowBoundAT) / (granularity - 1))
+        currentIT = lowBoundIT + (indexIT * (highBoundIT - lowBoundIT) / (granularity - 1))
+        scenarioPerformance = {}
+        for currentScenario in scenarioFiles:
+            print('generating input file for scenario ' + currentScenario + ', seed ' + str(currentSeed) + ' and (AT, IT)=(' + str(currentAT) + ',' + str(currentIT) + ')')
+            f = open('src/resources/' + currentScenario + '.json', "r")
+            fileData = json.loads(f.read())
+            fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['INTEREST_THRESHOLD'][
+                'par_InDiracUnivariateDistribution_value'] = int(currentIT)
+            fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['ADOPTION_THRESHOLD'][
+                'par_InDiracUnivariateDistribution_value'] = float(currentAT)
+            fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
+                'par_InCommunicationModule3_actionnode3_adopterPoints'] = int(AP)
+            fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
+                'par_InCommunicationModule3_actionnode3_interestedPoints'] = int(IP)
+            fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
+                'par_InCommunicationModule3_actionnode3_awarePoints'] = 0
+            fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_seed'] = currentSeed
+            fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_innerParallelism'] = 1
+            fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_outerParallelism'] = 1
+            with open('src/modelInputFiles/' + currentScenario + "-" + str(currentAT)[2:len(str(currentAT))] + "-" + str(int(math.floor(currentIT))) + '-' + str(currentSeed) + ".json", "w") as file:
+                json.dump(fileData, file, indent=2)
+            simulationRunner.invokeJarExternalData('src/modelInputFiles/' + currentScenario + "-" + str(currentAT)[2:len(str(currentAT))] + "-" + str(int(math.floor(currentIT))) + '-' + str(currentSeed), errorDef, True, 'src/resources/dataFiles/')
+            # do something with the results
+            scenarioPerformance[currentScenario] = extractData('images/AdoptionAnalysis.json')
+            print(str(scenarioPerformance))
+        parameterPerformance[indexAT][indexIT][currentSeed] = scenarioPerformance
+        print(str(parameterPerformance[indexAT][indexIT]))
+    analyseScenarioPerformance(parameterPerformance, lowBoundAT, highBoundAT, lowBoundIT, highBoundIT, scenarioFiles)
+
+# Helper function to extract the total number of cumulated adoptions from the provided file
+# @TODO make more general
+def extractData(path):
+    f = open(path, "r")
+    fileData = json.loads(f.read())
+    return fileData['cumulated']['total']
+
+# Function to analyse the performance of different scenarios by a set of metrics
+# TODO generalize and package away
+def analyseScenarioPerformance(parameterPerformance, lowBoundAT, highBoundAT, lowBoundIT, highBoundIT, scenarios):
+    #print('performance for ' + str(len(parameterPerformance)) + 'ATs and ' + str(len(parameterPerformance[0])) + ' ITs with entries like ' + str(parameterPerformance[0][0]))
+    scenarioDeltaAverages = open('src/resources/scenarioDeltaAverages', 'w')
+    scenarioDeltaMinSpread = open('src/resources/scenarioDeltaMinSpread', 'w')
+    scenarioDeltaMaxSpread = open('src/resources/scenarioDeltaMaxSpread', 'w')
+    scenarioDeltaAnalysis = open('src/resources/scenarioDeltaAnalysis', 'w')
+    scenarioAverages = open('src/resources/scenarioAverages', 'w')
+    print(str(parameterPerformance))
+    analysisData = []
+    for indexAT in range(len(parameterPerformance)):
+        for indexIT in range(len(parameterPerformance[indexAT])):
+            runningTally = 0
+            minEntry = 9999999999
+            maxEntry = 0
+            refCaseTally = 0
+            instrumentCaseTally = 0
+            #TODO make it work with more than two entries
+            for entry in parameterPerformance[indexAT][indexIT]:
+                currentEntry = parameterPerformance[indexAT][indexIT][entry][scenarios[1]] - parameterPerformance[indexAT][indexIT][entry][scenarios[0]]
+                runningTally += currentEntry
+                refCaseTally += parameterPerformance[indexAT][indexIT][entry][scenarios[0]]
+                instrumentCaseTally += parameterPerformance[indexAT][indexIT][entry][scenarios[1]]
+                if (currentEntry < minEntry):
+                    minEntry = currentEntry
+                if (currentEntry > maxEntry):
+                    maxEntry = currentEntry
+            average = runningTally/len(parameterPerformance[indexAT][indexIT])
+            relativeMax = average/maxEntry
+            relativeMin = average/minEntry
+            correspondingAT = lowBoundAT + (indexAT * (highBoundAT - lowBoundAT) / (len(parameterPerformance) - 1))
+            correspondingIT = lowBoundIT + (indexIT * (highBoundIT - lowBoundIT) / (len(parameterPerformance[indexAT]) - 1))
+            analysisEntry = {'adoptionThreshold': correspondingAT, 'interestThreshold': correspondingIT, 'average': average, 'maxSpread': maxEntry, 'minSpread': minEntry, 'maxSpreadRelative': maxEntry/average, 'minSpreadRelative': minEntry/average, 'baseCaseAverage': refCaseTally/len(parameterPerformance[indexAT][indexIT]), 'instrumentCaseAverage': instrumentCaseTally/len(parameterPerformance[indexAT][indexIT])}
+            analysisData.append(analysisEntry)
+            scenarioDeltaAnalysis.write(str(analysisEntry))
+            averageEntry = {'adoptionThreshold': correspondingAT, 'interestThreshold': correspondingIT, 'performance': average}
+            scenarioDeltaAverages.write(str(averageEntry) + '\n')
+            minSpread = {'adoptionThreshold': correspondingAT, 'interestThreshold': correspondingIT, 'performance': minEntry}
+            scenarioDeltaMinSpread.write(str(minSpread) + '\n')
+            maxSpread = {'adoptionThreshold': correspondingAT, 'interestThreshold': correspondingIT, 'performance': maxEntry}
+            scenarioDeltaMaxSpread.write(str(maxSpread) + '\n')
+            scenarioAverageEntry = {'adoptionThreshold': correspondingAT, 'interestThreshold': correspondingIT, 'baseCaseAverage': refCaseTally/len(parameterPerformance[indexAT][indexIT]), 'instrumentCaseAverage': instrumentCaseTally/len(parameterPerformance[indexAT][indexIT])}
+            scenarioAverages.write(str(scenarioAverageEntry) + '\n')
+            print(str(analysisEntry))
+    print(str(analysisData))
+    scenarioDeltaAverages.close()
+    scenarioDeltaMinSpread.close()
+    scenarioDeltaMaxSpread.close()
+    scenarioDeltaAnalysis.close()
+    plotRunStatistics(analysisData, 'relative')
+
+
+# Function to plot different stats over several runs on three-dimensional surfaces based on different modes.
+# The data to plot is represented as a list of dictionaries containing the values of the independent variabels (x and y)
+# while the value of the dependent variables depends on the mode and provides certain statistics of different runs.
+# Modes and required values for the statistics are as follows:
+#   absolute: expresses the absolute differences between simulation runs
+#       average: the average difference between different runs of the respective parameters
+#       minSpread: the minimal difference between different runs of the respective parameters
+#       maxSpread: the maximal difference between different runs of the respective parameters
+#   relative: expresses the relative differences between simulation runs for each parameter combination
+#       minSpread: the minimal difference between different runs of the respective parameters
+#       maxSpread: the maximal difference between different runs of the respective parameters
+#   averageCases: expresses the averaged differences between two compared scenarios
+#       baseCaseAverage: the reference case data for the dependent variable
+#       instrumentCaseAverage: the investigated case data for the dependent variable
+#   averageCasesRelative: expresses the averaged differences between two compared scenarios
+#       average: the average number of adoptions in the cases
+#       baseCaseAverage: the reference case data for the dependent variable
+#       instrumentCaseAverage: the investigated case data for the dependent variable
+# TODO make more general regarding the dimensions and package somewhere else
+def plotRunStatistics(analysisData, mode):
+    n = len(analysisData)
+    cd_x = np.zeros(n, dtype=float)
+    cd_y = np.zeros(n, dtype=float)
+    cd_z1 = np.zeros(n, dtype=float)
+    cd_z2 = np.zeros(n, dtype=float)
+    cd_z3 = np.zeros(n, dtype=float)
+    i = 0
+    for pointDict in analysisData:
+        cd_x[i] = pointDict['adoptionThreshold']
+        cd_y[i] = pointDict['interestThreshold']
+        if(mode == 'absolute'):
+            cd_z1[i] = pointDict['average']
+            cd_z2[i] = pointDict['minSpread']
+            cd_z3[i] = pointDict['maxSpread']
+        elif(mode == 'relative'):
+            cd_z1[i] = 1.0
+            cd_z2[i] = pointDict['minSpreadRelative']
+            cd_z3[i] = pointDict['maxSpreadRelative']
+        elif(mode == 'averageCases'):
+            cd_z1[i] = 0.0
+            cd_z2[i] = pointDict['baseCaseAverage']
+            cd_z3[i] = pointDict['instrumentCaseAverage']
+        elif (mode == 'averageCasesRelative'):
+            cd_z2[i] = pointDict['average'] / pointDict['baseCaseAverage']
+            cd_z3[i] = pointDict['average'] / pointDict['instrumentCaseAverage']
+            cd_z1[i] = (cd_z2[i] + cd_z3[i]) / 2.0
+        i += 1
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    if(mode == 'relative'):
+        colormap = cm.Greys
+        ax.plot_trisurf(cd_x, cd_y, cd_z1, cmap=colormap)
+        colormap = cm.inferno
+        ax.plot_trisurf(cd_x, cd_y, cd_z2, cmap=colormap)
+        colormap = cm.cividis
+        ax.plot_trisurf(cd_x, cd_y, cd_z3, cmap=colormap)
+    elif(mode == 'absolute'):
+        colormap = cm.RdYlGn_r
+        ax.plot_trisurf(cd_x, cd_y, cd_z1, cmap=colormap)
+    elif(mode == 'averageCases' or mode == 'averageCasesRelative'):
+        colormap = cm.Greys
+        ax.plot_trisurf(cd_x, cd_y, cd_z1, cmap=colormap)
+        colormap = cm.RdYlGn_r
+        ax.plot_trisurf(cd_x, cd_y, cd_z2, cmap=colormap)
+        ax.plot_trisurf(cd_x, cd_y, cd_z3, cmap=colormap)
+    ax.set_xlabel('Adoption Threshold')
+    ax.set_ylabel('Interest Threshold')
+    if(mode == 'absolute'):
+        ax.set_zlabel('Average Adoption Difference')
+    elif(mode == 'relative'):
+        ax.set_zlabel('Spread between Runs')
+    elif(mode == 'averageCases'):
+        ax.set_zlabel('Average Scenario Adoption')
+    elif (mode == 'averageCasesRelative'):
+        ax.set_zlabel('Relative Av. Scenario Adoption')
+    plt.show()
