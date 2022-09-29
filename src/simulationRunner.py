@@ -4,6 +4,7 @@ import json
 import sys
 import os
 
+# TODO make more general and move it away from here
 def navigateToTop():
     currentDir = os.getcwd().split('\\')[-1]
     #print(currentDir)
