@@ -1,8 +1,6 @@
 import sys
 import getopt
 import simulationManager
-import dataVisualization
-import os
 import simulationRunner
 import json
 
@@ -73,12 +71,12 @@ def runAll(parameters):
 
 # main method to set up the logging and invoke the optimization management method function
 if __name__ == '__main__':
-    #dataVisualization.visualizeData('trisurf', 'resources/gridDepthSearch-310-RMSD-reduced')
+    #dataVisualization.visualizeData('barChart', 'resources/ResultsDresdenFull')
     simulationRunner.navigateToTop()
     #quickCheck()
     argv = sys.argv[1:]
     # include new parameters for MHs
-    opts, args = getopt.getopt(argv, 'd:e:msr', ['acceptableDelta=', 'delta=', 'errorDef=', 'maxDepth=', 'scaleFactor=', 'resolution=', 'AT=', 'IT=', 'method=', 'AP=', 'IP=', 'runFile=', 'noRuns='])
+    opts, args = getopt.getopt(argv, 'd:e:msr', ['acceptableDelta=', 'delta=', 'errorDef=', 'maxDepth=', 'scaleFactor=', 'resolution=', 'AT=', 'IT=', 'method=', 'AP=', 'IP=', 'runFile=', 'noRuns=', 'noRepetitions=', 'scenarioList=', 'lowerBoundAT=', 'upperBoundAT=', 'lowerBoundIT=', 'upperBoundIT=', 'inputFile='] )
     print(opts)
     parameters = simulationManager.setParameters(opts)
     # TODO make safe

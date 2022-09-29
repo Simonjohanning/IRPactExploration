@@ -18,7 +18,7 @@ def calculateGrid(searchParameters, minAT, maxAT, minIT, maxIT):
             currentAT = minAT + ((maxAT-minAT)/(searchParameters['resolution']-1))*row
             currentIT = round(minIT + ((maxIT-minIT)/(searchParameters['resolution']-1))*col)
             if(searchParameters['printFlag']): print('calculating for IT '+str(currentIT)+' and AT '+str(currentAT))
-            simulationRunner.prepareJson('src/modelInputFiles/changedInterest', currentAT, currentIT, searchParameters['AP'], searchParameters['IP'])
+            simulationRunner.prepareJsonRand('src/modelInputFiles/changedInterest', currentAT, currentIT, searchParameters['AP'], searchParameters['IP'], searchParameters['inputFile'])
             # add the performance of the run to the list
             list[col][row] = float(simulationRunner.invokeJar(os.getcwd() + "\src\modelInputFiles\changedInterest-" + str(currentAT)[2:len(str(currentAT))] + "-" + str(currentIT), searchParameters['errorDefinition'], configuration.shellFlag))
             #if(searchParameters['printFlag']): print('Calculating for index ' + str(row*searchParameters['resolution']+col) + ' with row ' + str(row) + ' and column ' + str(col))
@@ -112,8 +112,8 @@ def nextDepthSearchIteration(searchParameters, searchState):
 # equidistantly until close enough to the reference time series or a given number of iterations are reached
 # initializes the first call with relatively broad parameters
 # returns the state of the iteration that terminates the search
-def iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, errorDefinition, AP, IP):
-    print(f"Running simulation with parameters \n acceptableDelta: {acceptableDelta} \n maxDepth {maxDepth} \n scaleFactor {scaleFactor} \n resolution {resolution} \n errorDefinition {errorDefinition} ")
+def iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, errorDefinition, AP, IP, inputFile, lowerBoundAT, upperBoundAT, lowerBoundIT, upperBoundIT):
+    print(f"Running simulation with parameters \n acceptableDelta: {acceptableDelta} \n maxDepth {maxDepth} \n scaleFactor {scaleFactor} \n resolution {resolution} \n errorDefinition {errorDefinition} \n lowerBoundAT {lowerBoundAT} \n upperBoundAT {upperBoundAT} \n lowerBoundIT {lowerBoundIT} \n upperBoundIT {upperBoundIT} ")
     # clean the folder of former modelInputFiles
     #check_output(['rm', 'src/modelInputFiles/*.json', '-r'], shell=True)
     return nextDepthSearchIteration({
@@ -124,13 +124,14 @@ def iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, e
         'printFlag': True,
         'errorDefinition': errorDefinition,
         'AP': AP,
-        'IP': IP
+        'IP': IP,
+        'inputFile': inputFile
     }, {
         'currentDelta': 999999,
         'currentRecursionDepth': 0,
         "evaluationData": [],
-        "lowerBoundAT": configuration.optimizationBounds['minAdoptionThreshold'],
-        "upperBoundAT": configuration.optimizationBounds['maxAdoptionThreshold'],
-        "lowerBoundIT": configuration.optimizationBounds['minInterestThreshold'],
-        "upperBoundIT": configuration.optimizationBounds['maxInterestThreshold']
+        "lowerBoundAT": lowerBoundAT,
+        "upperBoundAT": upperBoundAT,
+        "lowerBoundIT": lowerBoundIT,
+        "upperBoundIT": upperBoundIT
     })

@@ -4,7 +4,8 @@ gds_defaults = {
     'resolution': 1,
     'acceptableDelta': 1.2,
     'AP': 5,
-    'IP': 1
+    'IP': 1,
+    'inputFile': 'resources/scenario-dresden-full.json'
 }
 
 harmony_defaults = {
@@ -66,4 +67,5 @@ defaultInterestThreshold = 22
 
 pointListFile = 'src/resources/pointList'
 templateFile = 'src/modelInputFiles/changedInterest'
+defaultInputFile = 'src/resources/input-scenario-dresden-partial.json'
 shellFlag = False

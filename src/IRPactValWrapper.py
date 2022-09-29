@@ -12,7 +12,7 @@ class IRPactValWrapperMAE(AbstractWrapper):
                 configuration.optimizationBounds['minInterestThreshold']]
 
     def objective_function_value(self, decision_variable_values):
-            simulationRunner.prepareJson(configuration.templateFile, decision_variable_values[0], decision_variable_values[1])
+            simulationRunner.prepareJson(configuration.templateFile, decision_variable_values[0], decision_variable_values[1], configuration.defaultInputFile)
             return simulationRunner.invokeJar(configuration.templateFile + '-' + str(decision_variable_values[0])[2:len(str(decision_variable_values[0]))] + "-" + str(decision_variable_values[1]), 'MAE')
 
     def initial_decision_variable_value_estimates(self):
@@ -29,7 +29,7 @@ class IRPactValWrapperRMSE(AbstractWrapper):
                 configuration.optimizationBounds['minInterestThreshold']]
 
     def objective_function_value(self, decision_variable_values):
-            simulationRunner.prepareJson(configuration.templateFile, decision_variable_values[0], decision_variable_values[1])
+            simulationRunner.prepareJson(configuration.templateFile, decision_variable_values[0], decision_variable_values[1], configuration.defaultInputFile)
             return simulationRunner.invokeJar(configuration.templateFile + '-' + str(decision_variable_values[0])[2:len(str(decision_variable_values[0]))] + "-" + str(decision_variable_values[1]), 'RMSE')
 
     def initial_decision_variable_value_estimates(self):

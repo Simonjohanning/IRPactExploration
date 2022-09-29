@@ -7,9 +7,9 @@ import simulationRunner
 from operator import attrgetter
 import configuration
 
-def evaluateNextPoint(AT, IT):
+def evaluateNextPoint(AT, IT, inputFile):
     print('Evaluating point ' + str(AT) + ', ' + str(IT))
-    simulationRunner.prepareJson('src/modelInputFiles/newPoint', AT, IT)
+    simulationRunner.prepareJson('src/modelInputFiles/newPoint', AT, IT, inputFile)
     data = simulationRunner.invokeJar("src/modelInputFiles/newPoint-" + str(AT)[2:len(str(AT))] + "-" + str(IT), mode)
     #data = simulationRunner.mockInvokeJar(AT, IT)
     print(data)
@@ -143,7 +143,7 @@ def refineNeighbors(points, newCandidate):
             print('ERROR. This case should not occur')
     return neighborsRefined
 
-def refineList(currentPoints):
+def refineList(currentPoints, inputFile):
     # for point in currentPoints:
     #     point.printPoint()
     #     point.printNeighbors()
@@ -152,7 +152,7 @@ def refineList(currentPoints):
     mostUnrefinedPoint.printPoint()
     furthestNeighbor = retrieveFurthestNeighbor(mostUnrefinedPoint)
     print('its furtherst neighbor is ' + furthestNeighbor.generatePointString())
-    newPoint = evaluateNextPoint((mostUnrefinedPoint.AT + furthestNeighbor.AT) / 2, (mostUnrefinedPoint.IT + furthestNeighbor.IT) / 2)
+    newPoint = evaluateNextPoint((mostUnrefinedPoint.AT + furthestNeighbor.AT) / 2, (mostUnrefinedPoint.IT + furthestNeighbor.IT) / 2, inputFile)
     findNeighbors(newPoint, currentPoints)
     if refineNeighbors(currentPoints, newPoint):
         print('neighbors refined')
@@ -163,9 +163,9 @@ def refineList(currentPoints):
         print('no neighbor refinement found necessary')
         fileAppendPoint(newPoint, appendFile)
         currentPoints.append(newPoint)
-    refineList(currentPoints)
+    refineList(currentPoints, inputFile)
 
-def neighborRefining(errorMode):
+def neighborRefining(errorMode, scenarioFile):
     global mode
     mode = errorMode
     pointList = []
@@ -195,7 +195,7 @@ def neighborRefining(errorMode):
             currentPoint = Point(pointDict['error'], pointDict['maxDistance'], pointDict['AT'], pointDict['IT'], neighborQ1, neighborQ2, neighborQ3, neighborQ4)
             pointList.append(currentPoint)
     print(pointList)
-    refineList(pointList)
+    refineList(pointList, scenarioFile)
 
 class Point:
 
