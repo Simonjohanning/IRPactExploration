@@ -1,7 +1,6 @@
-import simulationPlotter
 
 # Function to analyse the performance of different scenarios by a set of metrics
-# TODO generalize and package away
+# TODO generalize
 def analyseScenarioPerformance(parameterPerformance, lowBoundAT, highBoundAT, lowBoundIT, highBoundIT, scenarios):
     #print('performance for ' + str(len(parameterPerformance)) + 'ATs and ' + str(len(parameterPerformance[0])) + ' ITs with entries like ' + str(parameterPerformance[0][0]))
     scenarioDeltaAverages = open('src/resources/scenarioDeltaAverages', 'w')
@@ -50,7 +49,7 @@ def analyseScenarioPerformance(parameterPerformance, lowBoundAT, highBoundAT, lo
     scenarioDeltaMinSpread.close()
     scenarioDeltaMaxSpread.close()
     scenarioDeltaAnalysis.close()
-    simulationPlotter.plotRunStatistics(analysisData, 'relative')
+    return analysisData
 
 
 
