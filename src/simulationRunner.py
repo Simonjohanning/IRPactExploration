@@ -30,7 +30,7 @@ def aggregateData(data, specialMode=None):
 
 # function to run the (repo-based current) version of the model instance with the conversation
 # given in the input file
-# TODO adjust doumentation
+# TODO adjust documentation
 def invokeJar(inputFile, modeParameters, model, shellFlag):
     try:
         if(modeParameters == 'weightedCumulativeAnnualAdoptionDelta' and model == 'PVact'):
@@ -40,7 +40,7 @@ def invokeJar(inputFile, modeParameters, model, shellFlag):
         elif(model == 'PVact'):
             print('using file ' + inputFile)
             data = check_output(
-                PVactModelHelper.constructInvokationCommand('PVact_internal', {'inputFile': inputFile}, modeParameters), shell=shellFlag).decode('utf-8').rstrip()
+                PVactModelHelper.constructInvokationCommand('PVact_internal', {'inputFile': inputFile}), shell=shellFlag).decode('utf-8').rstrip()
             print(data)
             if (len(data.split('{')) > 1):
                 return aggregateData(data)
@@ -54,6 +54,7 @@ def invokeJar(inputFile, modeParameters, model, shellFlag):
 
 # function to run the (repo-based current) version of the model instance with the conversation
 # given in the input file
+# TODO document
 def invokeJarExternalData(inputFile, modeParameters, shellFlag, externalPath):
     try:
         if(modeParameters == 'weightedCumulativeAnnualAdoptionDelta'):
@@ -78,9 +79,9 @@ def invokeJarExternalData(inputFile, modeParameters, shellFlag, externalPath):
 
 # function that manipulates the scenario definition to fit the adoption and interest threshold for the desired run
 # file is saved in the path and prefix specified by the templateFile parameter
-# TODO Adjust description
-def prepareJson(templateFile, mode, modeParameters, inputFile):
-    if(mode == 'PVact'):
+# TODO Adjust description and document
+def prepareJson(templateFile, model, modeParameters, inputFile):
+    if(model == 'PVact'):
         if(modeParameters['interestThreshold'] and modeParameters['adoptionThreshold'] and modeParameters['AP'] and modeParameters['IP'] and modeParameters['currentSeed']):
             returnFile = PVactModelHelper.prepareJSON(templateFile, inputFile, modeParameters['interestThreshold'], modeParameters['adoptionThreshold'], modeParameters['AP'], modeParameters['IP'], modeParameters['currentSeed'])
             print('Run configuration data written in file ' + returnFile + '.')

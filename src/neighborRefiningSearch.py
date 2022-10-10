@@ -6,30 +6,34 @@
 import simulationRunner
 from operator import attrgetter
 import configuration
+import helper
 
-def evaluateNextPoint(AT, IT, inputFile):
-    print('Evaluating point ' + str(AT) + ', ' + str(IT))
-    simulationRunner.prepareJson('src/modelInputFiles/newPoint', AT, IT, inputFile)
-    data = simulationRunner.invokeJar("src/modelInputFiles/newPoint-" + str(AT)[2:len(str(AT))] + "-" + str(IT), mode)
-    #data = simulationRunner.mockInvokeJar(AT, IT)
+# TODO document
+def evaluateNextPoint(X, Y, model, mode, inputFile):
+    print('Evaluating point ' + str(X) + ', ' + str(Y))
+    runConfigurationPrefix = simulationRunner.prepareJson('src/modelInputFiles/newPoint', model, helper.convertGridInMode(X, Y, model), inputFile)
+    data = simulationRunner.invokeJar(runConfigurationPrefix, mode)
+    #data = simulationRunner.mockInvokeJar(X, IT)
     print(data)
-    protoPoint = Point(float(data), 0, AT, IT, None, None, None, None)
+    protoPoint = Point(float(data), 0, X, Y, None, None, None, None)
     return protoPoint
 
+# TODO document
 def fileAppendPoint(point, file):
-    outString = '{"AT": ' + str(point.AT) + ', "IT": ' + str(point.IT) + ', "error": ' + str(point.error) + ', "maxDistance": ' + str(point.maxDistance)
+    outString = '{"X": ' + str(point.X) + ', "Y": ' + str(point.Y) + ', "error": ' + str(point.error) + ', "maxDistance": ' + str(point.maxDistance)
     if (hasattr(point, 'neighborQ1') and not point.neighborQ1 is None):
-        outString += ', "neighborQ1": { "AT": ' + str(point.neighborQ1.AT) + ', "IT": ' + str(point.neighborQ1.IT) + '}'
+        outString += ', "neighborQ1": { "X": ' + str(point.neighborQ1.X) + ', "Y": ' + str(point.neighborQ1.Y) + '}'
     if (hasattr(point, 'neighborQ2') and not point.neighborQ2 is None):
-        outString += ',  "neighborQ2": { "AT": ' + str(point.neighborQ2.AT) + ', "IT": ' + str(point.neighborQ2.IT) + '}'
+        outString += ',  "neighborQ2": { "X": ' + str(point.neighborQ2.X) + ', "Y": ' + str(point.neighborQ2.Y) + '}'
     if (hasattr(point, 'neighborQ3') and not point.neighborQ3 is None):
-        outString += ', "neighborQ3": { "AT": ' + str(point.neighborQ3.AT) + ', "IT": ' + str(point.neighborQ3.IT) + '}'
+        outString += ', "neighborQ3": { "X": ' + str(point.neighborQ3.X) + ', "Y": ' + str(point.neighborQ3.Y) + '}'
     if (hasattr(point, 'neighborQ4') and not point.neighborQ4 is None):
-        outString += ', "neighborQ4": { "AT": ' + str(point.neighborQ4.AT) + ', "IT": ' + str(point.neighborQ4.IT) + '}'
+        outString += ', "neighborQ4": { "X": ' + str(point.neighborQ4.X) + ', "Y": ' + str(point.neighborQ4.Y) + '}'
     outString += '}\n'
     # print('writing string to file: \n' + writeString)
     file.write(outString)
 
+# TODO document
 def rewritePointFile(newPointList):
     file = open(configuration.pointListFile, "w")
     file.close()
@@ -40,8 +44,9 @@ def rewritePointFile(newPointList):
         fileAppendPoint(point, appendFile)
     appendFile.close()
 
+# TODO document
 def retrieveFurthestNeighbor(respectivePoint):
-    print('printing neighbors:')
+    # print('printing neighbors:')
     respectivePoint.printNeighbors()
     if (hasattr(respectivePoint, 'neighborQ1')):
         if (pointDistance(respectivePoint, respectivePoint.neighborQ1) == respectivePoint.maxDistance):
@@ -57,25 +62,42 @@ def retrieveFurthestNeighbor(respectivePoint):
             return respectivePoint.neighborQ4
 
 def pointDistance(a, b):
-    return abs(a.AT - b.AT) + (abs(a.IT - b.IT) / configuration.optimizationBounds['maxInterestThreshold'])
+    """Determines the distance between two points a and b in two-dimensional space
+
+    :param a: point to find distance in relation to b
+    :type a: Point
+    :param b: point to find distance in relation to a
+    :type b: Point
+    :returns distance between given points
+    :rtype float
+    """
+    return (abs(a.X - b.X) / (configuration.optimizationBounds['maxX'] - configuration.optimizationBounds['minX'])  + (abs(a.Y - b.Y) / (configuration.optimizationBounds['maxY'] - configuration.optimizationBounds['minY'])))
 
 def findNeighbors(newPoint, currentPoints):
-    # calculate distances to new point
-   # print('in findNeighbors: ' + str(currentPoints))
-    print('finding neighbors for new point')
-    newPoint.printPoint()
+    """Finds the closest points (neighbors) for a given point in a set of points and attaches them to the Point
+
+    :param newPoint: the point to find neighbors for
+    :type newPoint: Point
+    :param currentPoints: the set of points to find neighbors in
+    :type currentPoints: List<Point>
+    :returns newPoint with its neighbors attached
+    :rtype Point
+    """
+
+    #newPoint.printPoint()
     pointRelationsQ1 = []
     pointRelationsQ2 = []
     pointRelationsQ3 = []
     pointRelationsQ4 = []
+    # calculate distances to new point
     for existingPoint in currentPoints:
-        respectivePointRelation = PointRelation(existingPoint, abs(newPoint.AT - existingPoint.AT) + abs(newPoint.IT - existingPoint.IT))
+        respectivePointRelation = PointRelation(existingPoint, abs(newPoint.X - existingPoint.X) + abs(newPoint.Y - existingPoint.Y))
         # Sort point into respective quadrant
-        if (existingPoint.AT < newPoint.AT and existingPoint.IT < newPoint.IT):
+        if (existingPoint.X < newPoint.X and existingPoint.Y < newPoint.Y):
             pointRelationsQ3.append(respectivePointRelation)
-        elif (existingPoint.AT < newPoint.AT and existingPoint.IT >= newPoint.IT):
+        elif (existingPoint.X < newPoint.X and existingPoint.Y >= newPoint.Y):
             pointRelationsQ2.append(respectivePointRelation)
-        elif (existingPoint.AT >= newPoint.AT and existingPoint.IT < newPoint.IT):
+        elif (existingPoint.X >= newPoint.X and existingPoint.Y < newPoint.Y):
             pointRelationsQ4.append(respectivePointRelation)
         else:
             pointRelationsQ1.append(respectivePointRelation)
@@ -98,52 +120,54 @@ def findNeighbors(newPoint, currentPoints):
     #print(str(currentPoints))
     return newPoint
 
+# TODO document
 def refineNeighbors(points, newCandidate):
     # For all neighbors of all points, check if the new candidate would be a better neighbor
     neighborsRefined = False
     for point in points:
         # find out what quadrant the new candidate lies wrt the point and check respective neighbor if the new candidate would be a better match
-        if(newCandidate.AT < point.AT and newCandidate.IT < point.IT):
+        if(newCandidate.X < point.X and newCandidate.Y < point.Y):
             if (not hasattr(point, 'neighborQ3')):
-                point.neighborQ3 = ReducedPoint(newCandidate.AT, newCandidate.IT)
+                point.neighborQ3 = ReducedPoint(newCandidate.X, newCandidate.Y)
                 neighborsRefined = True
                 point.recalculatedMaxDistance()
             elif (pointDistance(point, newCandidate) < pointDistance(point, point.neighborQ3)):
-                point.neighborQ3 = ReducedPoint(newCandidate.AT, newCandidate.IT)
+                point.neighborQ3 = ReducedPoint(newCandidate.X, newCandidate.Y)
                 neighborsRefined = True
                 point.recalculatedMaxDistance()
-        elif(newCandidate.AT < point.AT and newCandidate.IT >= point.IT):
+        elif(newCandidate.X < point.X and newCandidate.Y >= point.Y):
             if (not hasattr(point, 'neighborQ2')):
-                point.neighborQ2 = ReducedPoint(newCandidate.AT, newCandidate.IT)
+                point.neighborQ2 = ReducedPoint(newCandidate.X, newCandidate.Y)
                 neighborsRefined = True
                 point.recalculatedMaxDistance()
             elif (pointDistance(point, newCandidate) < pointDistance(point, point.neighborQ2)):
-                point.neighborQ2 = ReducedPoint(newCandidate.AT, newCandidate.IT)
+                point.neighborQ2 = ReducedPoint(newCandidate.X, newCandidate.Y)
                 neighborsRefined = True
                 point.recalculatedMaxDistance()
-        elif (newCandidate.AT >= point.AT and newCandidate.IT < point.IT):
+        elif (newCandidate.X >= point.X and newCandidate.Y < point.Y):
             if (not hasattr(point, 'neighborQ4')):
-                point.neighborQ4 = ReducedPoint(newCandidate.AT, newCandidate.IT)
+                point.neighborQ4 = ReducedPoint(newCandidate.X, newCandidate.Y)
                 neighborsRefined = True
                 point.recalculatedMaxDistance()
             elif (pointDistance(point, newCandidate) < pointDistance(point, point.neighborQ4)):
-                point.neighborQ4 = ReducedPoint(newCandidate.AT, newCandidate.IT)
+                point.neighborQ4 = ReducedPoint(newCandidate.X, newCandidate.Y)
                 neighborsRefined = True
                 point.recalculatedMaxDistance()
-        elif (newCandidate.AT >= point.AT and newCandidate.IT >= point.IT):
+        elif (newCandidate.X >= point.X and newCandidate.Y >= point.Y):
             if (not hasattr(point, 'neighborQ1')):
-                point.neighborQ1 = ReducedPoint(newCandidate.AT, newCandidate.IT)
+                point.neighborQ1 = ReducedPoint(newCandidate.X, newCandidate.Y)
                 neighborsRefined = True
                 point.recalculatedMaxDistance()
             elif (pointDistance(point, newCandidate) < pointDistance(point, point.neighborQ1)):
-                point.neighborQ1 = ReducedPoint(newCandidate.AT, newCandidate.IT)
+                point.neighborQ1 = ReducedPoint(newCandidate.X, newCandidate.Y)
                 neighborsRefined = True
                 point.recalculatedMaxDistance()
         else:
             print('ERROR. This case should not occur')
     return neighborsRefined
 
-def refineList(currentPoints, inputFile):
+#TODO document and make more efficient; check for exit condition
+def refineList(currentPoints, model, mode, inputFile):
     # for point in currentPoints:
     #     point.printPoint()
     #     point.printNeighbors()
@@ -152,7 +176,7 @@ def refineList(currentPoints, inputFile):
     mostUnrefinedPoint.printPoint()
     furthestNeighbor = retrieveFurthestNeighbor(mostUnrefinedPoint)
     print('its furtherst neighbor is ' + furthestNeighbor.generatePointString())
-    newPoint = evaluateNextPoint((mostUnrefinedPoint.AT + furthestNeighbor.AT) / 2, (mostUnrefinedPoint.IT + furthestNeighbor.IT) / 2, inputFile)
+    newPoint = evaluateNextPoint((mostUnrefinedPoint.X + furthestNeighbor.X) / 2, (mostUnrefinedPoint.Y + furthestNeighbor.Y) / 2, model, mode, inputFile)
     findNeighbors(newPoint, currentPoints)
     if refineNeighbors(currentPoints, newPoint):
         print('neighbors refined')
@@ -163,11 +187,10 @@ def refineList(currentPoints, inputFile):
         print('no neighbor refinement found necessary')
         fileAppendPoint(newPoint, appendFile)
         currentPoints.append(newPoint)
-    refineList(currentPoints, inputFile)
+    refineList(currentPoints, model, mode, inputFile)
 
-def neighborRefining(errorMode, scenarioFile):
-    global mode
-    mode = errorMode
+# TODO document
+def neighborRefining(mode, model,scenarioFile):
     pointList = []
     print('reading file ' + configuration.pointListFile)
     with open(configuration.pointListFile, 'r') as file:
@@ -182,46 +205,47 @@ def neighborRefining(errorMode, scenarioFile):
             neighborQ4 = None
             if ('neighborQ1' in pointDict):
                 neighborQ1Dict = pointDict['neighborQ1']
-                neighborQ1 = ReducedPoint(neighborQ1Dict['AT'], neighborQ1Dict['IT'])
+                neighborQ1 = ReducedPoint(neighborQ1Dict['X'], neighborQ1Dict['Y'])
             if ('neighborQ2' in pointDict):
                 neighborQ2Dict = pointDict['neighborQ2']
-                neighborQ2 = ReducedPoint(neighborQ2Dict['AT'], neighborQ2Dict['IT'])
+                neighborQ2 = ReducedPoint(neighborQ2Dict['X'], neighborQ2Dict['Y'])
             if ('neighborQ3' in pointDict):
                 neighborQ3Dict = pointDict['neighborQ3']
-                neighborQ3 = ReducedPoint(neighborQ3Dict['AT'], neighborQ3Dict['IT'])
+                neighborQ3 = ReducedPoint(neighborQ3Dict['X'], neighborQ3Dict['Y'])
             if ('neighborQ4' in pointDict):
                 neighborQ4Dict = pointDict['neighborQ4']
-                neighborQ4 = ReducedPoint(neighborQ4Dict['AT'], neighborQ4Dict['IT'])
-            currentPoint = Point(pointDict['error'], pointDict['maxDistance'], pointDict['AT'], pointDict['IT'], neighborQ1, neighborQ2, neighborQ3, neighborQ4)
+                neighborQ4 = ReducedPoint(neighborQ4Dict['X'], neighborQ4Dict['Y'])
+            currentPoint = Point(pointDict['error'], pointDict['maxDistance'], pointDict['X'], pointDict['Y'], neighborQ1, neighborQ2, neighborQ3, neighborQ4)
             pointList.append(currentPoint)
     print(pointList)
-    refineList(pointList, scenarioFile)
+    refineList(pointList, model, mode, scenarioFile)
 
+# TODO document data structures
 class Point:
 
-    def __init__(self, error, maxDistance, AT, IT, neighborQ1, neighborQ2, neighborQ3, neighborQ4):
+    def __init__(self, error, maxDistance, X, Y, neighborQ1, neighborQ2, neighborQ3, neighborQ4):
         self.error = error
         self.maxDistance = maxDistance
-        self.AT = AT
-        self.IT = IT
+        self.X = X
+        self.Y = Y
         if(neighborQ1): self.neighborQ1 = neighborQ1
         if(neighborQ2): self.neighborQ2 = neighborQ2
         if(neighborQ3): self.neighborQ3 = neighborQ3
         if(neighborQ4): self.neighborQ4 = neighborQ4
 
     def generatePointString(self):
-        return '(' + str(self.AT) + ', ' + str(self.IT) + ')'
+        return '(' + str(self.X) + ', ' + str(self.Y) + ')'
 
     def printPoint(self):
-        print('Point (' + str(self.AT) + ', ' + str(self.IT) + ') has distance ' + str(self.maxDistance))
+        print('Point (' + str(self.X) + ', ' + str(self.Y) + ') has distance ' + str(self.maxDistance))
 
     def printNeighbors(self):
-        if(hasattr(self, 'neighborQ1')): print('(' + str(self.neighborQ1.AT) + ', ' + str(self.neighborQ1.IT) + ') with distance ' + str(pointDistance(self, self.neighborQ1)))
-        if(hasattr(self, 'neighborQ2')): print('(' + str(self.neighborQ2.AT) + ', ' + str(self.neighborQ2.IT) + ') with distance ' + str(
+        if(hasattr(self, 'neighborQ1')): print('(' + str(self.neighborQ1.X) + ', ' + str(self.neighborQ1.Y) + ') with distance ' + str(pointDistance(self, self.neighborQ1)))
+        if(hasattr(self, 'neighborQ2')): print('(' + str(self.neighborQ2.X) + ', ' + str(self.neighborQ2.Y) + ') with distance ' + str(
             pointDistance(self, self.neighborQ2)))
-        if(hasattr(self, 'neighborQ3')): print('(' + str(self.neighborQ3.AT) + ', ' + str(self.neighborQ3.IT) + ') with distance ' + str(
+        if(hasattr(self, 'neighborQ3')): print('(' + str(self.neighborQ3.X) + ', ' + str(self.neighborQ3.Y) + ') with distance ' + str(
             pointDistance(self, self.neighborQ3)))
-        if(hasattr(self, 'neighborQ4')): print('(' + str(self.neighborQ4.AT) + ', ' + str(self.neighborQ4.IT) + ') with distance ' + str(
+        if(hasattr(self, 'neighborQ4')): print('(' + str(self.neighborQ4.X) + ', ' + str(self.neighborQ4.Y) + ') with distance ' + str(
             pointDistance(self, self.neighborQ4)))
 
     def recalculatedMaxDistance(self):
@@ -236,15 +260,15 @@ class Point:
             if (pointDistance(self, self.neighborQ4) > self.maxDistance): self.maxDistance = pointDistance(self, self.neighborQ4)
 
 class ReducedPoint:
-    def __init__(self, AT, IT):
-        self.AT = AT
-        self.IT = IT
+    def __init__(self, X, Y):
+        self.X = X
+        self.Y = Y
 
     def printReducedPoint(self):
-        print(str(self.AT) + ', ' + str(self.IT) + ')')
+        print(str(self.X) + ', ' + str(self.Y) + ')')
 
     def generatePointString(self):
-        return '(' + str(self.AT) + ', ' + str(self.IT) + ')'
+        return '(' + str(self.X) + ', ' + str(self.Y) + ')'
 
 class PointRelation:
     def __init__(self, point, distance):

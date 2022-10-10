@@ -1,6 +1,8 @@
 import json
 import simulationManager
 
+# TODO make less hacky
+
 def quickLaunch(parameters):
     # dataVisualization.visualizeData('barChart', 'resources/ResultsDresdenFull')
     #quickCheck()

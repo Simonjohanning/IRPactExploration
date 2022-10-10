@@ -2,9 +2,7 @@ import numpy as np
 import math
 import simulationRunner
 import configuration
-import os
 import PVactModelHelper
-import configurationPVact
 
 # function to set up the simulation runs of the current iteration level
 # calculates the parameters for equidistant sampling in the respective parameter region
@@ -31,7 +29,7 @@ def calculateGrid(searchParameters, minX, maxX, minY, maxIT, model):
             else:
                 raise NotImplementedError('Model ' + model + ' not implemented.')
             # add the performance of the run to the list
-            if(inputFile):
+            if(not inputFile == None):
                 list[col][row] = float(simulationRunner.invokeJar(inputFile, searchParameters['errorDefinition'], model, configuration.shellFlag))
             else:
                 raise NotImplementedError('inputFile not set by the model; most likely the model is invalid or implemented incompletely.')

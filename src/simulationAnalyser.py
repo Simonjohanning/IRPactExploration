@@ -1,6 +1,6 @@
 
 # Function to analyse the performance of different scenarios by a set of metrics
-# TODO generalize
+# TODO generalize and document
 def analyseScenarioPerformance(parameterPerformance, lowBoundAT, highBoundAT, lowBoundIT, highBoundIT, scenarios):
     #print('performance for ' + str(len(parameterPerformance)) + 'ATs and ' + str(len(parameterPerformance[0])) + ' ITs with entries like ' + str(parameterPerformance[0][0]))
     scenarioDeltaAverages = open('src/resources/scenarioDeltaAverages', 'w')

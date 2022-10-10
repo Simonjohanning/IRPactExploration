@@ -117,7 +117,7 @@ def setParameters(opts):
         elif o == '--inputFile':
             parameters['inputFile'] = a
         else:
-            print('unrecognized parameter ' + str(o))
+            raise NotImplementedError('unrecognized parameter ' + str(o))
     return parameters
 
 # TODO make more general
@@ -143,3 +143,11 @@ def printMissingParameters(parameterDictionary, parameterArray):
             print(parameter)
     elif(len(missingParameters) == 1):
         print('Parameter ' + missingParameters[0] + ' missing.')
+
+# Method to translate the model-agnostic parameters into the semantics of the model
+# TODO document better
+def convertGridInMode(X, Y, mode):
+    if(mode == 'PVact'):
+        return {'AT': X, 'IT': Y}
+    else:
+        raise NotImplementedError('Mode ' + mode + ' is not implemented')

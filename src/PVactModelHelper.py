@@ -33,6 +33,7 @@ def constructInvokationCommand(mode, param):
 
 # Function to prepare the shipped JSON file to adjust it to individual runs.
 # Changes some parameters in the file and returns the name stub to the input file
+# TODO document
 def prepareJSON(templateFile, inputFile, currentIT, currentAT, AP , IP, currentSeed):
     helper.navigateToTop()
     f = open(inputFile, "r")
@@ -56,6 +57,7 @@ def prepareJSON(templateFile, inputFile, currentIT, currentAT, AP , IP, currentS
     return templateFile + "-" + str(currentAT)[2:len(str(currentAT))] + "-" + str(int(math.floor(currentIT))) + '-' + str(currentSeed)
 
 # Function to return the relevant analysis data (total number of cumulated adoptions) to the requesting function
+# TODO document
 def readAnalysisData(analysisDataPath):
     f = open(analysisDataPath, "r")
     fileData = json.loads(f.read())
@@ -64,6 +66,7 @@ def readAnalysisData(analysisDataPath):
 # Function to extract the PVact relevant parameters to prepare the respective JSON file
 # function that manipulates the scenario definition to fit the adoption and interest threshold for the desired run
 # file is saved in the path and prefix specified by the templateFile parameter
+# TODO document
 def prepareJSONRand(parameters):
     AP = int(parameters['AP']) if 'AP' in parameters else configurationPVact.gds_defaults['AP']
     IP = int(parameters['IP']) if 'IP' in parameters else configurationPVact.gds_defaults['IP']

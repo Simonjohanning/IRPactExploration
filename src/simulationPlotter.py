@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import helper
 
+# TODO document
 def visualizeData(graphType, dataPath):
     n = helper.determineDataPoints(dataPath)
     if(graphType == 'trisurf'):
@@ -10,6 +11,7 @@ def visualizeData(graphType, dataPath):
     elif(graphType == 'barChart'):
         visualize2DRepresentationPlot(graphType, dataPath, n)
 
+# TODO document and generalize
 def visualize2DRepresentationPlot(graphType, dataPath, n):
     adoptionKeys = set()
     interestKeys = set()
@@ -64,6 +66,7 @@ def visualize2DRepresentationPlot(graphType, dataPath, n):
     #     ax.set_zlabel('Error')
     #     plt.show()
 
+# TODO document and generalize
 def visualizeLinearRepresentationPlot(graphType, dataPath, n):
     cd_x = np.zeros(n, dtype=float)
     cd_y = np.zeros(n, dtype=float)
@@ -167,6 +170,7 @@ def plotRunStatistics(analysisData, mode):
         ax.set_zlabel('Relative Av. Scenario Adoption')
     plt.show()
 
+# TODO document and generalize
 def plotCumulatedAdoptions(adoptionFilePath, saveFile):
     with open(adoptionFilePath, 'r') as adoptionsFile:
         years = []
@@ -204,6 +208,7 @@ def plotCumulatedAdoptions(adoptionFilePath, saveFile):
 
 # Function to save the specified data into a file given by the prefix and the chosen error definition.
 # Will append to the specified file and plot the data if the plotFlag is set.
+# TODO document
 def saveAndPlotEvaluationData(evaluationData, filePrefix, errorDefinition, plotFlag):
     print('saving and plotting')
     file = open(filePrefix + errorDefinition, "w")
