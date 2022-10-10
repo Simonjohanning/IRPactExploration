@@ -9,11 +9,11 @@ from metaheuristic_algorithms.firefly_algorithm import FireflyAlgorithm
 from metaheuristic_algorithms.simplified_particle_swarm_optimization import SimplifiedParticleSwarmOptimization
 from metaheuristic_algorithms.simulated_annealing import SimulatedAnnealing
 from metaheuristic_algorithms.genetic_algorithm import GeneticAlgorithm
-import json
 import random
 
 import simulationPlotter
 import simulationAnalyser
+import configurationPVact
 
 import PVactModelHelper
 
@@ -28,12 +28,13 @@ import PVactModelHelper
 #   pvactval: generates the data and statistics for several instances of the scenarios based on the scenario list
 #   multipleRuns: runs simulations for a specified number of repetitions for the same parameters and stores the results
 #   plotRuns: plotRuns executes and plots single runs specified in the runFile
+# TODO ensure parameters contains model for specific-gds stuff
 def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag):
     if (executionMethod == 'pvactval'):
         if ('noRepetitions' in parameters and 'scenarioList' in parameters and 'resolution' in parameters and 'lowerBoundAT' in parameters and 'upperBoundAT' in parameters and 'lowerBoundIT' in parameters and 'upperBoundIT' in parameters and 'AP' in parameters and 'IP' in parameters):
             scenarioFiles = parameters['scenarioList'].split(',')
             print('reading ' + str(len(scenarioFiles)) + ' scenarios files ')
-            # createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), int(parameters['resolution']), parameters['errorDef'], float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']), parameters['AP'], parameters['IP'])
+            createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), int(parameters['resolution']), parameters['errorDef'], float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']),  {'AP': float(parameters['AP']), 'IP': float(parameters['IP']), 'model': 'PVact'})
             # TODO make less hacky and specific here
             analysisData = simulationAnalyser.analyseScenarioPerformance(configuration.testScenarioData,
                                                           float(parameters['lowerBoundAT']),
@@ -64,6 +65,9 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
             with open('src/' + parameters['runFile'], 'r') as file:
                 for line in file:
                     runAndPlot(eval(line), parameters, errorDefinition, '')
+    elif (executionMethod == 'PVact_forwardRuns'):
+        scenarioFiles = parameters['scenarioList'].split(',')
+        createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), float(parameters['resolution']), errorDefinition, float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']), {'AP': float(parameters['AP']), 'IP': float(parameters['IP']), 'model': 'PVact'})
     else:
         runOptimization(errorDefinition, executionMethod, parameters, plotFlag)
 
@@ -104,36 +108,42 @@ def runOptimization(errorDefinition, optimizationMethod, parameters, plotFlag):
     else:
         print('method ' + optimizationMethod + ' is not known. Please provide a valid method')
 
+# TODO make less model-specific
 def gridDepthSearch(errorDefinition, parameters, plotFlag):
     # the grid depth search iteratively samples smaller / finer regions of the parameter space
     # equidistantly until close enough to the reference time series or a given number of iterations are reached
     # parameters are the acceptableDelta, maxDepth, scaleFactor, resolution and errorDefinition;
     # see function for further documentation
-    maxDepth = parameters['maxDepth'] if ('maxDepth' in parameters) else configuration.gds_defaults['maxDepth']
-    scaleFactor = parameters['scaleFactor'] if ('scaleFactor' in parameters) else configuration.gds_defaults[
-        'scaleFactor']
-    resolution = parameters['resolution'] if ('resolution' in parameters) else configuration.gds_defaults[
-        'resolution']
-    acceptableDelta = parameters['acceptableDelta'] if ('acceptableDelta' in parameters) else \
-        configuration.gds_defaults['acceptableDelta']
-    AP = parameters['AP'] if ('AP' in parameters) else configuration.gds_defaults['AP']
-    IP = parameters['IP'] if ('IP' in parameters) else configuration.gds_defaults['IP']
-    inputFile = parameters['inputFile'] if ('inputFile' in parameters) else configuration.gds_defaults['inputFile']
-    lowerBoundAT = parameters['lowerBoundAT'] if ('lowerBoundAT' in parameters) else configuration.optimizationBounds[
-        'minAdoptionThreshold']
-    upperBoundAT = parameters['upperBoundAT'] if ('upperBoundAT' in parameters) else configuration.optimizationBounds[
-        'maxAdoptionThreshold']
-    lowerBoundIT = parameters['lowerBoundIT'] if ('lowerBoundIT' in parameters) else configuration.optimizationBounds[
-        'minInterestThreshold']
-    upperBoundIT = parameters['upperBoundIT'] if ('upperBoundIT' in parameters) else configuration.optimizationBounds[
-        'maxInterestThreshold']
-    optimizationResult = gridDepthSearch.iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution,
-                                                                errorDefinition, AP, IP, inputFile, lowerBoundAT,
-                                                                upperBoundAT, lowerBoundIT, upperBoundIT)
-    print(optimizationResult)
-    simulationPlotter.saveAndPlotEvaluationData(optimizationResult['evaluationData'],
-                                                'src/resources/gridDepthSearch-' + str(AP) + str(IP) + '0-',
-                                                errorDefinition, plotFlag)
+    if(not 'model' in parameters):
+        raise KeyError('Key model not set in parameters for gridDepthSearch')
+    else:
+        # general parameters
+        maxDepth = parameters['maxDepth'] if ('maxDepth' in parameters) else configuration.gds_defaults['maxDepth']
+        scaleFactor = parameters['scaleFactor'] if ('scaleFactor' in parameters) else configuration.gds_defaults[
+            'scaleFactor']
+        resolution = parameters['resolution'] if ('resolution' in parameters) else configuration.gds_defaults[
+            'resolution']
+        acceptableDelta = parameters['acceptableDelta'] if ('acceptableDelta' in parameters) else \
+            configuration.gds_defaults['acceptableDelta']
+        inputFile = parameters['inputFile'] if ('inputFile' in parameters) else configuration.gds_defaults['inputFile']
+        lowerBoundX = parameters['lowerBoundX'] if ('lowerBoundX' in parameters) else configuration.optimizationBounds[
+            'minAdoptionThreshold']
+        upperBoundX = parameters['upperBoundX'] if ('upperBoundX' in parameters) else configuration.optimizationBounds[
+            'maxAdoptionThreshold']
+        lowerBoundY = parameters['lowerBoundY'] if ('lowerBoundY' in parameters) else configuration.optimizationBounds[
+            'minInterestThreshold']
+        upperBoundY = parameters['upperBoundY'] if ('upperBoundY' in parameters) else configuration.optimizationBounds[
+            'maxInterestThreshold']
+        optimizationResult = gridDepthSearch.iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution,
+                                                                    errorDefinition, parameters, inputFile, lowerBoundX,
+                                                                    upperBoundX, lowerBoundY, upperBoundY)
+        print(optimizationResult)
+        # TODO make file prefix more general
+        modelPrefix = None
+        if(parameters['model'] == 'PVact'):
+            modelPrefix = PVactModelHelper.deriveFilePrefix(parameters)
+        simulationPlotter.saveAndPlotEvaluationData(optimizationResult['evaluationData'],
+                                                    modelPrefix, errorDefinition, plotFlag)
 
 def runHarmonySearch(optimizationWrapper, parameters, objective):
     if optimizationWrapper is None:
@@ -290,8 +300,7 @@ def runAndPlot(model, parameters, errorDefinition, nameAppend):
 
     # ToDo change back or make more elegant (randomness)
 
-    returnData = simulationRunner.invokeJar(configurationFile),
-        parameters['errorDef'], True)
+    returnData = simulationRunner.invokeJar(configurationFile,parameters['errorDef'], True)
     print('finished run with configuration AP: ' + str(parameters['adoptionThreshold']) + ', IP: ' + str(
         parameters['interestThreshold']) + ', AP: ' + str(parameters['AP']) + ', IP: ' + str(parameters['IP']) + ' and error ' + str(returnData))
     simulationRunner.navigateToTop()
@@ -317,10 +326,11 @@ def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lower
         # For each scenario calculate and store the results
         for currentScenario in scenarioFiles:
             jarPath = None
-            f = open('src/resources/' + currentScenario + '.json', "r")
-            fileData = json.loads(f.read())
             if(specificParameters['model'] == 'PVact'):
-                jarPath = PVactModelHelper.prepareJSON(fileData, currentX, currentY, currentSeed, currentScenario, specificParameters['AP'], specificParameters['IP'])
+                modeParameters = {'adoptionThreshold': indexX, 'interestThreshold': indexY, 'currentSeed': currentSeed}
+                modeParameters['AP'] = int(specificParameters['AP']) if 'AP' in specificParameters else configurationPVact.gds_defaults['AP']
+                modeParameters['IP'] = int(specificParameters['IP']) if 'IP' in specificParameters else configurationPVact.gds_defaults['IP']
+                jarPath = simulationRunner.prepareJson(currentScenario, 'PVact', modeParameters, configuration.scenarioPath + currentScenario + '.json')
             if(jarPath):
                 simulationRunner.invokeJarExternalData(jarPath, errorDef, True, 'src/resources/dataFiles/')
             else:

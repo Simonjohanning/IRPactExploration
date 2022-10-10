@@ -3,31 +3,45 @@ import math
 import simulationRunner
 import configuration
 import os
+import PVactModelHelper
+import configurationPVact
 
 # function to set up the simulation runs of the current iteration level
 # calculates the parameters for equidistant sampling in the respective parameter region
 # number of samples is given by the resolution (entry in searchParameters dictionary),
-# region is defined through the min and max of the AT and IT parameters
+# region is defined through the min and max of the X and Y parameters
 def calculateGrid(searchParameters, minX, maxX, minY, maxIT, model):
     list = [[0 for col in range(searchParameters['resolution'])] for row in range(searchParameters['resolution'])]
     performanceEvaluation = [0 for run in range(int(math.pow(searchParameters['resolution'], 2)))]
     # prepare the grid for the simulation errors (2D list entries)
     for row in range(searchParameters['resolution']):
         for col in range(searchParameters['resolution']):
+            inputFile = None
             # parameters for entries are calculated equidistantly (currentX = respective run)
-            currentAT = minX + ((maxX-minX)/(searchParameters['resolution']-1))*row
-            currentIT = round(minY + ((maxIT-minY)/(searchParameters['resolution']-1))*col)
-            if(searchParameters['printFlag']): print('calculating for IT '+str(currentIT)+' and AT '+str(currentAT))
-            simulationRunner.prepareJsonRand('src/modelInputFiles/changedInterest', currentAT, currentIT, searchParameters['AP'], searchParameters['IP'], searchParameters['inputFile'])
+            currentX = minX + ((maxX-minX)/(searchParameters['resolution']-1))*row
+            currentY = round(minY + ((maxIT-minY)/(searchParameters['resolution']-1))*col)
+            if(searchParameters['printFlag']): print('calculating for X '+str(currentX)+' and Y '+str(currentY))
+            if(model == 'PVact'):
+                parameters = searchParameters
+                parameters['adoptionThreshold'] = currentX
+                parameters['interestThreshold'] = currentY
+                inputFile = PVactModelHelper.prepareJsonRand(parameters)
+            elif(model == None):
+                raise KeyError('Error: model not set.')
+            else:
+                raise NotImplementedError('Model ' + model + ' not implemented.')
             # add the performance of the run to the list
-            list[col][row] = float(simulationRunner.invokeJar(os.getcwd() + "\src\modelInputFiles\changedInterest-" + str(currentAT)[2:len(str(currentAT))] + "-" + str(currentIT), searchParameters['errorDefinition'], model, configuration.shellFlag))
+            if(inputFile):
+                list[col][row] = float(simulationRunner.invokeJar(inputFile, searchParameters['errorDefinition'], model, configuration.shellFlag))
+            else:
+                raise NotImplementedError('inputFile not set by the model; most likely the model is invalid or implemented incompletely.')
             #if(searchParameters['printFlag']): print('Calculating for index ' + str(row*searchParameters['resolution']+col) + ' with row ' + str(row) + ' and column ' + str(col))
     #        list[col][row] = mockInvokeJar(currentAT, currentIT)
             if(searchParameters['printFlag']): print('Performance of run ' + str(row*searchParameters['resolution']+col) + ': ' + str(list[col][row]))
             # evaluation of a single run is recorded in parameters and performance
             performanceEvaluation[row*searchParameters['resolution']+col] = {
-                "adoptionThreshold": currentAT,
-                "interestThreshold": currentIT,
+                "X": currentX,
+                "Y": currentY,
                 "performance": list[col][row]
             }
     return list, performanceEvaluation

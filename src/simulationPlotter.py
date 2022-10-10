@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from mpl_toolkits.mplot3d import Axes3D
 import helper
 
 def visualizeData(graphType, dataPath):
@@ -213,4 +212,4 @@ def saveAndPlotEvaluationData(evaluationData, filePrefix, errorDefinition, plotF
             file.write(str(evaluationData[i][j])+'\n')
     file.close()
     if(plotFlag):
-        dataVisualization.visualizeData('trisurf', filePrefix + errorDefinition)
+        visualizeData('trisurf', filePrefix + errorDefinition)

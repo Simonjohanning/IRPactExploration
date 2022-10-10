@@ -9,32 +9,31 @@ import helper
 
 
 # Function to construct the command line array used to invoke the jar
-# TODO document
+# TODO document and make less system-specific
 def constructInvokationCommand(mode, param):
     if(mode == 'PVact_weightedCumulativeAnnualAdoptionDelta'):
         return ['java', '-jar', 'src/resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', param['inputFile'] + '.json', '-o',
-         'example-output.json',
-         '--noConsole', '--logPath', 'log.log', '--calculatePerformance', 'cumulativeAnnualAdoptionDelta']
-    elif(mode == 'PVact_internal')
+         'simulationFiles/example-output.json',
+         '--noConsole', '--logPath', 'simulationFiles/log.log', '--calculatePerformance', 'cumulativeAnnualAdoptionDelta']
+    elif(mode == 'PVact_internal'):
         return ['java', '-jar', 'src/resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i',  param['inputFile'] + '.json', '-o',
-         'example-output.json',
-         '--noConsole', '--logPath', 'log.log', '--calculatePerformance',  param['modeParameters'], '--gnuplotCommand',
+         'simulationFiles/example-output.json',
+         '--noConsole', '--logPath', 'simulationFiles/log.log', '--calculatePerformance',  param['modeParameters'], '--gnuplotCommand',
          'C:/Users/mai11dlx/gnuplot/bin/gnuplot.exe']
     elif(mode == 'PVact_weightedCumulativeAnnualAdoptionDelta_external'):
         return ['java', '-jar', 'src/resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', param['inputFile'] + '.json', '-o',
-         'example-output.json',
-         '--noConsole', '--logPath', 'log.log', '--calculatePerformance', 'cumulativeAnnualAdoptionDelta', '--dataDir',
+         'simulationFiles/example-output.json',
+         '--noConsole', '--logPath', 'simulationFiles/log.log', '--calculatePerformance', 'cumulativeAnnualAdoptionDelta', '--dataDir',
          param['externalPath']]
-    elif(mode == 'PVact_external')
+    elif(mode == 'PVact_external'):
         return ['java', '-jar', 'src/resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', param['inputFile'] + '.json', '-o',
-         'example-output.json',
-         '--noConsole', '--logPath', 'log.log', '--calculatePerformance', param['modeParameters'], '--gnuplotCommand',
-         'C:/Users/mai11dlx/gnuplot/bin/gnuplot.exe', '--dataDir', param['externalPath'], shell = shellFlag).decode(
-            'utf-8').rstrip()
+         'simulationFiles/example-output.json',
+         '--noConsole', '--logPath', 'simulationFiles/log.log', '--calculatePerformance', param['modeParameters'], '--gnuplotCommand',
+         'C:/Users/mai11dlx/gnuplot/bin/gnuplot.exe', '--dataDir', param['externalPath']]
 
-        # Function to prepare the shipped JSON file to adjust it to individual runs.
+# Function to prepare the shipped JSON file to adjust it to individual runs.
 # Changes some parameters in the file and returns the name stub to the input file
-def prepareJSON(templateFile, inputFile, currentIT, currentAT, currentSeed, AP , IP, currentSeed):
+def prepareJSON(templateFile, inputFile, currentIT, currentAT, AP , IP, currentSeed):
     helper.navigateToTop()
     f = open(inputFile, "r")
     fileData = json.loads(f.read())
@@ -66,8 +65,10 @@ def readAnalysisData(analysisDataPath):
 # function that manipulates the scenario definition to fit the adoption and interest threshold for the desired run
 # file is saved in the path and prefix specified by the templateFile parameter
 def prepareJSONRand(parameters):
-    if ('adoptionThreshold' in parameters and 'interestThreshold' in parameters and 'AP' in parameters and 'IP' in parameters):
-        templateFile = configurationPVact.baseInputFile
+    AP = int(parameters['AP']) if 'AP' in parameters else configurationPVact.gds_defaults['AP']
+    IP = int(parameters['IP']) if 'IP' in parameters else configurationPVact.gds_defaults['IP']
+    if ('adoptionThreshold' in parameters and 'interestThreshold'):
+        templateFile = parameters['inputFile'] if 'inputFile' in parameters else configurationPVact.baseInputFile
         helper.navigateToTop()
         f = open(templateFile + '.json', "r")
         fileData = json.loads(f.read())
@@ -76,16 +77,21 @@ def prepareJSONRand(parameters):
         fileData['years'][0]['sets']['set_InDiracUnivariateDistribution']['ADOPTION_THRESHOLD'][
             'par_InDiracUnivariateDistribution_value'] = float(parameters['adoptionThreshold'])
         fileData['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-            'par_InCommunicationModule3_actionnode3_adopterPoints'] = int(parameters['AP'])
+            'par_InCommunicationModule3_actionnode3_adopterPoints'] = AP
         fileData['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-            'par_InCommunicationModule3_actionnode3_interestedPoints'] = int(parameters['IP'])
+            'par_InCommunicationModule3_actionnode3_interestedPoints'] = IP
         fileData['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
             'par_InCommunicationModule3_actionnode3_awarePoints'] = 0
         fileData['years'][0]['scalars']['sca_InGeneral_seed'] = random.randint(0, 99999)
-        print('writing file with AP ' + parameters['AP'] + ' and IP ' + parameters['IP'] + ' and AT ' + parameters['adoptionThreshold'] + ' and IT ' + parameters['interestThreshold'])
+        print('writing file with AP ' + AP + ' and IP ' + IP + ' and AT ' + parameters['adoptionThreshold'] + ' and IT ' + parameters['interestThreshold'])
         with open(templateFile + "-" + parameters['adoptionThreshold'][2:len(parameters['adoptionThreshold'])] + "-" + parameters['interestThreshold'] + ".json", "w") as file:
             json.dump(fileData, file, indent=2)
         return configurationPVact.baseInputFile + '-' + str(parameters['adoptionThreshold'])[2:len(str(parameters['adoptionThreshold']))] + '-' + str(parameters['interestThreshold'])
     else:
         print('error! Missing parameters adoptionThreshold, interestThreshold, AP and/or IP in preparing files for PVact')
 
+# TODO generalize and document
+def deriveFilePrefix(parameters):
+    AP = parameters['AP'] if 'AP' in parameters else configurationPVact.gds_defaults['AP']
+    IP = parameters['IP'] if 'IP' in parameters else configurationPVact.gds_defaults['IP']
+    return 'src/resources/gridDepthSearch-' + str(AP) + str(IP) + '0-'

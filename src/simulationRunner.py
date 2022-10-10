@@ -64,7 +64,7 @@ def invokeJarExternalData(inputFile, modeParameters, shellFlag, externalPath):
         else:
             print('using file ' + inputFile)
             data = check_output(
-               PVactModelHelper.constructInvokationCommand('PVact_external', {'inputFile': inputFile, 'externalPath': externalPath, 'modeParameters': modeParameters}))
+               PVactModelHelper.constructInvokationCommand('PVact_external', {'inputFile': inputFile, 'externalPath': externalPath, 'modeParameters': modeParameters}), shell = shellFlag).decode('utf-8').rstrip()
             print(data)
             if (len(data.split('{')) > 1):
                 return aggregateData(data)
@@ -84,6 +84,7 @@ def prepareJson(templateFile, mode, modeParameters, inputFile):
         if(modeParameters['interestThreshold'] and modeParameters['adoptionThreshold'] and modeParameters['AP'] and modeParameters['IP'] and modeParameters['currentSeed']):
             returnFile = PVactModelHelper.prepareJSON(templateFile, inputFile, modeParameters['interestThreshold'], modeParameters['adoptionThreshold'], modeParameters['AP'], modeParameters['IP'], modeParameters['currentSeed'])
             print('Run configuration data written in file ' + returnFile + '.')
+            return returnFile
         else:
             helper.printMissingParameters(modeParameters, ['interestThreshold', 'adoptionThreshold', 'AP', 'IP', 'currentSeed'])
 
