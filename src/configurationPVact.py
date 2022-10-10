@@ -1,0 +1,1 @@
+baseInputFile = 'src/resources/scenario-dresden-full'

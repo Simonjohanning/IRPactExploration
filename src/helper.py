@@ -1,4 +1,5 @@
 import json
+import os
 
 # Simple helper function to determine the number of (line-based) data points in the specified file
 def determineDataPoints(dataPath):
@@ -118,3 +119,27 @@ def setParameters(opts):
         else:
             print('unrecognized parameter ' + str(o))
     return parameters
+
+# TODO make more general
+def navigateToTop():
+    currentDir = os.getcwd().split('\\')[-1]
+    #print(currentDir)
+    if (currentDir == 'C:\\'):
+        os.chdir('Users\mai11dlx\PycharmProjects\IRPactExploration')
+    elif (not currentDir == 'IRPactExploration'):
+        print('current dir is ' + os.getcwd() + '; navigating up')
+        os.chdir('../')
+        navigateToTop()
+
+# TODO document and test
+def printMissingParameters(parameterDictionary, parameterArray):
+    missingParameters = []
+    for parameter in parameterArray:
+        if(not parameter in parameterDictionary):
+            missingParameters.append(parameter)
+    if(len(missingParameters) > 1):
+        print('Missing parameters: \n')
+        for parameter in missingParameters:
+            print(parameter)
+    elif(len(missingParameters) == 1):
+        print('Parameter ' + missingParameters[0] + ' missing.')

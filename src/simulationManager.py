@@ -15,6 +15,8 @@ import random
 import simulationPlotter
 import simulationAnalyser
 
+import PVactModelHelper
+
 # TODO package a bunch of more concrete stuff here in a library and separate setup and execution
 
 # module to initialize the optimization process.
@@ -26,7 +28,7 @@ import simulationAnalyser
 #   pvactval: generates the data and statistics for several instances of the scenarios based on the scenario list
 #   multipleRuns: runs simulations for a specified number of repetitions for the same parameters and stores the results
 #   plotRuns: plotRuns executes and plots single runs specified in the runFile
-def runSimulations(errorDefinition, executionMethod, parameters, plotFlag):
+def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag):
     if (executionMethod == 'pvactval'):
         if ('noRepetitions' in parameters and 'scenarioList' in parameters and 'resolution' in parameters and 'lowerBoundAT' in parameters and 'upperBoundAT' in parameters and 'lowerBoundIT' in parameters and 'upperBoundIT' in parameters and 'AP' in parameters and 'IP' in parameters):
             scenarioFiles = parameters['scenarioList'].split(',')
@@ -51,13 +53,11 @@ def runSimulations(errorDefinition, executionMethod, parameters, plotFlag):
             print('AP' in parameters)
             print('IP' in parameters)
     elif (executionMethod == 'multipleRuns'):
-        if ('AT' in parameters and 'IT' in parameters and 'noRuns' in parameters):
-            for index in range(int(parameters['noRuns'])):
-                runAndPlot({'adoptionThreshold': parameters['AT'], 'interestThreshold': parameters['IT']}, parameters,
-                           errorDefinition, 'run' + str(index))
-                print('written out in file plots/' + errorDefinition + '-' + str(parameters['AP']) + '-' + str(
-                    parameters['IP']) + '-' + str(parameters['AP']) + '-' + str(parameters['IT']) + '-runError-' + str(
-                    index) + '.png')
+        for index in range(int(parameters['noRuns'])):
+            runAndPlot(model, parameters, errorDefinition, 'run' + str(index))
+            #TODO delete print('written out in file plots/' + errorDefinition + '-' + str(parameters['AP']) + '-' + str(
+                # parameters['IP']) + '-' + str(parameters['AP']) + '-' + str(parameters['IT']) + '-runError-' + str(
+                # index) + '.png')
     elif (executionMethod == 'plotRuns'):
         if ('runFile' in parameters):
             # go through all runs in file and do single runs with consecutive plot
@@ -283,68 +283,53 @@ def runGeneticAltgorithm(optimizationWrapper, parameters, objective):
 # Function to execute a single run and to plot the results based on the cumulated adoptions
 # for the simulation and the reference data for the simulated years.
 # TODO tidy up, make more abstract and name properly
-def runAndPlot(runDict, parameters, errorDefinition, nameAppend):
-    baseInputFile = 'src/resources/scenario-dresden-full'
-    print('running with configuration AP: ' + str(runDict['adoptionThreshold']) + ', IP: ' + str(
-        runDict['interestThreshold']) + ', AP: ' + str(parameters['AP']) + ', IP: ' + str(
-        parameters['IP']))
+def runAndPlot(model, parameters, errorDefinition, nameAppend):
+    if (model == 'PVact'):
+        configurationFile = PVactModelHelper.prepareJSONRand(parameters)
+
+
     # ToDo change back or make more elegant (randomness)
-    simulationRunner.prepareJsonRand(baseInputFile, runDict['adoptionThreshold'], runDict['interestThreshold'],
-                                 parameters['AP'],
-                                 parameters['IP'])
-    returnData = simulationRunner.invokeJar(
-        baseInputFile + '-' + str(runDict['adoptionThreshold'])[2:len(str(runDict['adoptionThreshold']))] + '-' + str(
-            runDict['interestThreshold']),
+
+    returnData = simulationRunner.invokeJar(configurationFile),
         parameters['errorDef'], True)
-    print('finished run with configuration AP: ' + str(runDict['adoptionThreshold']) + ', IP: ' + str(
-        runDict['interestThreshold']) + ', AP: ' + str(parameters['AP']) + ', IP: ' + str(parameters['IP']) + ' and error ' + str(returnData))
+    print('finished run with configuration AP: ' + str(parameters['adoptionThreshold']) + ', IP: ' + str(
+        parameters['interestThreshold']) + ', AP: ' + str(parameters['AP']) + ', IP: ' + str(parameters['IP']) + ' and error ' + str(returnData))
     simulationRunner.navigateToTop()
     simulationPlotter.plotCumulatedAdoptions('images/JaehrlicheKumulierteAdoptionenVergleich-data.csv', 'plots/' + errorDefinition + '-' + str(parameters['AP']) + '-' + str(
-            parameters['IP']) + '-' + str(runDict['adoptionThreshold']) + '-' + str(runDict['interestThreshold']) + '-' + str(returnData) + '-' + nameAppend + '.png')
+            parameters['IP']) + '-' + str(parameters['adoptionThreshold']) + '-' + str(parameters['interestThreshold']) + '-' + str(returnData) + '-' + nameAppend + '.png')
 
 # Function to schedule, run and analyse a set of runs based on the parameters and scenarios provided
-# @TODO clean up and generalize
-def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lowBoundAT, highBoundAT, lowBoundIT, highBoundIT, AP, IP):
+def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, specificParameters):
     print('creating runs')
     seedSet = set()
     parameterPerformance = [[{} for col in range(granularity)] for row in range(granularity)]
+    # create the number of runs (repetitions of all parameter combinations) by initializing the seeds and calculating the relevant parameters
     for l in range(int(noRepetitions * math.pow(granularity, 2))):
         currentSeed = random.randint(0, int(math.pow(noRepetitions, 2) * math.pow(granularity, 3) * 2))
         while(currentSeed in seedSet):
             currentSeed = random.randint(0, int(math.pow(noRepetitions, 2) * math.pow(granularity, 3) * 2))
         seedSet.add(currentSeed)
-        #print('AT index ' + str(math.floor(l/noRepetitions) % granularity), 'IT index ' + str(math.floor(l/(noRepetitions * granularity))))
-        indexAT = (math.floor(l/noRepetitions) % granularity)
-        indexIT = (math.floor(l/(noRepetitions * granularity)))
-        currentAT = lowBoundAT + (indexAT * (highBoundAT - lowBoundAT) / (granularity - 1))
-        currentIT = lowBoundIT + (indexIT * (highBoundIT - lowBoundIT) / (granularity - 1))
+        indexX = (math.floor(l/noRepetitions) % granularity)
+        indexY = (math.floor(l/(noRepetitions * granularity)))
+        currentX = lowerBoundX + (indexX * (upperBoundX - lowerBoundX) / (granularity - 1))
+        currentY = lowerBoundY + (indexY * (upperBoundY - lowerBoundY) / (granularity - 1))
         scenarioPerformance = {}
+        # For each scenario calculate and store the results
         for currentScenario in scenarioFiles:
-            print('generating input file for scenario ' + currentScenario + ', seed ' + str(currentSeed) + ' and (AT, IT)=(' + str(currentAT) + ',' + str(currentIT) + ')')
+            jarPath = None
             f = open('src/resources/' + currentScenario + '.json', "r")
             fileData = json.loads(f.read())
-            fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['INTEREST_THRESHOLD'][
-                'par_InDiracUnivariateDistribution_value'] = int(currentIT)
-            fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['ADOPTION_THRESHOLD'][
-                'par_InDiracUnivariateDistribution_value'] = float(currentAT)
-            fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-                'par_InCommunicationModule3_actionnode3_adopterPoints'] = int(AP)
-            fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-                'par_InCommunicationModule3_actionnode3_interestedPoints'] = int(IP)
-            fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-                'par_InCommunicationModule3_actionnode3_awarePoints'] = 0
-            fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_seed'] = currentSeed
-            fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_innerParallelism'] = 1
-            fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_outerParallelism'] = 1
-            with open('src/modelInputFiles/' + currentScenario + "-" + str(currentAT)[2:len(str(currentAT))] + "-" + str(int(math.floor(currentIT))) + '-' + str(currentSeed) + ".json", "w") as file:
-                json.dump(fileData, file, indent=2)
-            simulationRunner.invokeJarExternalData('src/modelInputFiles/' + currentScenario + "-" + str(currentAT)[2:len(str(currentAT))] + "-" + str(int(math.floor(currentIT))) + '-' + str(currentSeed), errorDef, True, 'src/resources/dataFiles/')
-            # do something with the results
-            f = open('images/AdoptionAnalysis.json', "r")
-            fileData = json.loads(f.read())
-            scenarioPerformance[currentScenario] = fileData['cumulated']['total']
+            if(specificParameters['model'] == 'PVact'):
+                jarPath = PVactModelHelper.prepareJSON(fileData, currentX, currentY, currentSeed, currentScenario, specificParameters['AP'], specificParameters['IP'])
+            if(jarPath):
+                simulationRunner.invokeJarExternalData(jarPath, errorDef, True, 'src/resources/dataFiles/')
+            else:
+                print('Error! No model was set so no configuration file was created for this run')
+            if(specificParameters['model'] == 'PVact'):
+                scenarioPerformance[currentScenario] = PVactModelHelper.readAnalysisData('images/AdoptionAnalysis.json')
             print(str(scenarioPerformance))
-        parameterPerformance[indexAT][indexIT][currentSeed] = scenarioPerformance
-        print(str(parameterPerformance[indexAT][indexIT]))
-    simulationAnalyser.analyseScenarioPerformance(parameterPerformance, lowBoundAT, highBoundAT, lowBoundIT, highBoundIT, scenarioFiles)
+        parameterPerformance[indexX][indexY][currentSeed] = scenarioPerformance
+        print(str(parameterPerformance[indexX][indexY]))
+    # Return the analysis of the data to the invoking function
+    return simulationAnalyser.analyseScenarioPerformance(parameterPerformance, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, scenarioFiles)
 

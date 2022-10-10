@@ -1,20 +1,11 @@
-import random
+import helper
+import PVactModelHelper
 from subprocess import check_output, CalledProcessError
 import json
 import sys
 import os
 
-# TODO make more general and move it away from here
-def navigateToTop():
-    currentDir = os.getcwd().split('\\')[-1]
-    #print(currentDir)
-    if (currentDir == 'C:\\'):
-        os.chdir('Users\mai11dlx\PycharmProjects\IRPactExploration')
-    elif (not currentDir == 'IRPactExploration'):
-        print('current dir is ' + os.getcwd() + '; navigating up')
-        os.chdir('../')
-        navigateToTop()
-
+# TODO document
 def aggregateData(data, specialMode=None):
     dictData = eval(data)
     if(specialMode):
@@ -39,20 +30,17 @@ def aggregateData(data, specialMode=None):
 
 # function to run the (repo-based current) version of the model instance with the conversation
 # given in the input file
-def invokeJar(inputFile, modeParameters, shelLFlag):
+# TODO adjust doumentation
+def invokeJar(inputFile, modeParameters, model, shellFlag):
     try:
-        if(modeParameters == 'weightedCumulativeAnnualAdoptionDelta'):
-            data = check_output(
-                ['java', '-jar', 'src/resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', inputFile + '.json', '-o',
-                 'example-output.json',
-                 '--noConsole', '--logPath', 'log.log', '--calculatePerformance', 'cumulativeAnnualAdoptionDelta'],
-                shell=shelLFlag).decode('utf-8').rstrip()
+        if(modeParameters == 'weightedCumulativeAnnualAdoptionDelta' and model == 'PVact'):
+            data = check_output(PVactModelHelper.constructInvokationCommand('PVact_weightedCumulativeAnnualAdoptionDelta', {'inputFile': inputFile}),
+                shell=shellFlag).decode('utf-8').rstrip()
             return aggregateData(data, 'weightedCumulativeAnnualAdoptionDelta')
-        else:
+        elif(model == 'PVact'):
             print('using file ' + inputFile)
             data = check_output(
-                ['java', '-jar', 'src/resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', inputFile + '.json', '-o', 'example-output.json',
-                 '--noConsole', '--logPath', 'log.log', '--calculatePerformance', modeParameters, '--gnuplotCommand', 'C:/Users/mai11dlx/gnuplot/bin/gnuplot.exe'], shell=shelLFlag).decode('utf-8').rstrip()
+                PVactModelHelper.constructInvokationCommand('PVact_internal', {'inputFile': inputFile}, modeParameters), shell=shellFlag).decode('utf-8').rstrip()
             print(data)
             if (len(data.split('{')) > 1):
                 return aggregateData(data)
@@ -62,23 +50,21 @@ def invokeJar(inputFile, modeParameters, shelLFlag):
         print('ran into exception for jar call')
         print(e)
         sys.exit()
+
 
 # function to run the (repo-based current) version of the model instance with the conversation
 # given in the input file
 def invokeJarExternalData(inputFile, modeParameters, shellFlag, externalPath):
     try:
         if(modeParameters == 'weightedCumulativeAnnualAdoptionDelta'):
-            data = check_output(
-                ['java', '-jar', 'src/resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', inputFile + '.json', '-o',
-                 'example-output.json',
-                 '--noConsole', '--logPath', 'log.log', '--calculatePerformance', 'cumulativeAnnualAdoptionDelta', '--dataDir', externalPath],
+            data = check_output( PVactModelHelper.constructInvokationCommand('PVact_weightedCumulativeAnnualAdoptionDelta_external', {'externalPath': externalPath})
+               ,
                 shell=shellFlag).decode('utf-8').rstrip()
             return aggregateData(data, 'weightedCumulativeAnnualAdoptionDelta')
         else:
             print('using file ' + inputFile)
             data = check_output(
-                ['java', '-jar', 'src/resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', inputFile + '.json', '-o', 'example-output.json',
-                 '--noConsole', '--logPath', 'log.log', '--calculatePerformance', modeParameters, '--gnuplotCommand', 'C:/Users/mai11dlx/gnuplot/bin/gnuplot.exe', '--dataDir', externalPath], shell=shellFlag).decode('utf-8').rstrip()
+               PVactModelHelper.constructInvokationCommand('PVact_external', {'inputFile': inputFile, 'externalPath': externalPath, 'modeParameters': modeParameters}))
             print(data)
             if (len(data.split('{')) > 1):
                 return aggregateData(data)
@@ -89,55 +75,19 @@ def invokeJarExternalData(inputFile, modeParameters, shellFlag, externalPath):
         print(e)
         sys.exit()
 
-# mock function to test the rest of the module
-def mockInvokeJar(AT, IT):
-    if(AT > 0 and IT > 0):
-        return (1/(AT*IT))
-    else:
-        return 999999
 
 # function that manipulates the scenario definition to fit the adoption and interest threshold for the desired run
 # file is saved in the path and prefix specified by the templateFile parameter
-def prepareJson(templateFile, adoptionThreshold, interestThreshold, AP, IP, inputFile):
-    navigateToTop()
-    print(os.getcwd())
-    f = open(inputFile, "r")
-    fileData = json.loads(f.read())
-    fileData['years'][0]['sets']['set_InDiracUnivariateDistribution']['INTEREST_THRESHOLD'][
-        'par_InDiracUnivariateDistribution_value'] = int(interestThreshold)
-    fileData['years'][0]['sets']['set_InDiracUnivariateDistribution']['ADOPTION_THRESHOLD'][
-        'par_InDiracUnivariateDistribution_value'] = float(adoptionThreshold)
-    fileData['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-        'par_InCommunicationModule3_actionnode3_adopterPoints'] = int(AP)
-    fileData['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-        'par_InCommunicationModule3_actionnode3_interestedPoints'] = int(IP)
-    fileData['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-        'par_InCommunicationModule3_actionnode3_awarePoints'] = 0
-    print('writing file with AP ' + str(AP) + ' and IP ' + str(IP) + ' and AT ' + str(adoptionThreshold) + ' and IT ' + str(interestThreshold))
-    with open(templateFile+"-"+str(adoptionThreshold)[2:len(str(adoptionThreshold))]+"-"+str(interestThreshold)+".json", "w") as file:
-        json.dump(fileData, file, indent=2)
+# TODO Adjust description
+def prepareJson(templateFile, mode, modeParameters, inputFile):
+    if(mode == 'PVact'):
+        if(modeParameters['interestThreshold'] and modeParameters['adoptionThreshold'] and modeParameters['AP'] and modeParameters['IP'] and modeParameters['currentSeed']):
+            returnFile = PVactModelHelper.prepareJSON(templateFile, inputFile, modeParameters['interestThreshold'], modeParameters['adoptionThreshold'], modeParameters['AP'], modeParameters['IP'], modeParameters['currentSeed'])
+            print('Run configuration data written in file ' + returnFile + '.')
+        else:
+            helper.printMissingParameters(modeParameters, ['interestThreshold', 'adoptionThreshold', 'AP', 'IP', 'currentSeed'])
 
-# function that manipulates the scenario definition to fit the adoption and interest threshold for the desired run
-# file is saved in the path and prefix specified by the templateFile parameter
-def prepareJsonRand(templateFile, adoptionThreshold, interestThreshold, AP, IP):
-    navigateToTop()
-    f = open(templateFile + '.json', "r")
-    fileData = json.loads(f.read())
-    fileData['years'][0]['sets']['set_InDiracUnivariateDistribution']['INTEREST_THRESHOLD'][
-        'par_InDiracUnivariateDistribution_value'] = int(interestThreshold)
-    fileData['years'][0]['sets']['set_InDiracUnivariateDistribution']['ADOPTION_THRESHOLD'][
-        'par_InDiracUnivariateDistribution_value'] = float(adoptionThreshold)
-    fileData['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-        'par_InCommunicationModule3_actionnode3_adopterPoints'] = int(AP)
-    fileData['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-        'par_InCommunicationModule3_actionnode3_interestedPoints'] = int(IP)
-    fileData['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-        'par_InCommunicationModule3_actionnode3_awarePoints'] = 0
-    fileData['years'][0]['scalars']['sca_InGeneral_seed'] = random.randint(0, 99999)
-    print('writing file with AP ' + str(AP) + ' and IP ' + str(IP) + ' and AT ' + str(adoptionThreshold) + ' and IT ' + str(interestThreshold))
-    with open(templateFile+"-"+str(adoptionThreshold)[2:len(str(adoptionThreshold))]+"-"+str(interestThreshold)+".json", "w") as file:
-        json.dump(fileData, file, indent=2)
-
+# TODO consolidate with TODO in IRPactValWrapper about missing parameter hack
 def prepareJsonDefaultIT(templateFile, adoptionThreshold, interestThreshold):
     f = open('src/resources/example-input_old.json', "r")
     fileData = json.loads(f.read())

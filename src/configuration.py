@@ -52,15 +52,15 @@ geneticAlgorithm_default = {
 }
 
 optimizationBounds = {
-    'minInterestThreshold': 1,
-    'maxInterestThreshold': 128,
-    'minAdoptionThreshold': 0,
-    'maxAdoptionThreshold': 1.0
+    'minY': 1,
+    'maxY': 128,
+    'minX': 0,
+    'maxX': 1.0
 }
 
 optimizationStartValues = {
-    'adoptionThreshold': 0.8,
-    'interestThreshold': 12
+    'X': 0.8,
+    'Y': 12
 }
 
 defaultInterestThreshold = 22

@@ -11,9 +11,9 @@ class IRPactValWrapperMAE(AbstractWrapper):
         return [configuration.optimizationBounds['minAdoptionThreshold'],
                 configuration.optimizationBounds['minInterestThreshold']]
 
-    def objective_function_value(self, decision_variable_values):
+    def objective_function_value(self, decision_variable_values, model):
             simulationRunner.prepareJson(configuration.templateFile, decision_variable_values[0], decision_variable_values[1], configuration.defaultInputFile)
-            return simulationRunner.invokeJar(configuration.templateFile + '-' + str(decision_variable_values[0])[2:len(str(decision_variable_values[0]))] + "-" + str(decision_variable_values[1]), 'MAE')
+            return simulationRunner.invokeJar(configuration.templateFile + '-' + str(decision_variable_values[0])[2:len(str(decision_variable_values[0]))] + "-" + str(decision_variable_values[1]), 'MAE', model)
 
     def initial_decision_variable_value_estimates(self):
         return [configuration.optimizationStartValues[0], configuration.optimizationStartValues[1]]
@@ -35,7 +35,7 @@ class IRPactValWrapperRMSE(AbstractWrapper):
     def initial_decision_variable_value_estimates(self):
         return [configuration.optimizationStartValues[0], configuration.optimizationStartValues[1]]
 
-# remove ugly hack with hardcoding the AT
+# TODO remove ugly hack with hardcoding the AT
 class IRPactValWrapperMAESingleVariable(AbstractWrapper):
 
     def maximum_decision_variable_values(self):
@@ -51,7 +51,7 @@ class IRPactValWrapperMAESingleVariable(AbstractWrapper):
     def initial_decision_variable_value_estimates(self):
         return configuration.optimizationStartValues['adoptionThreshold']
 
-# remove ugly hack with hardcoding the AT
+# TODO remove ugly hack with hardcoding the AT
 class IRPactValWrapperRMSESingleVariable(AbstractWrapper):
 
     def maximum_decision_variable_values(self):
