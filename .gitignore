@@ -2,9 +2,11 @@
 images
 settings_*
 src/modelInputFiles
-**/example-output.json
 *.log
 venv
 *.conf
 .idea/
 __pycache__
+/src/resources/
+example-output.json
+plots/
