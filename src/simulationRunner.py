@@ -5,8 +5,15 @@ import json
 import sys
 import os
 
-# TODO document
 def aggregateData(data, specialMode=None):
+    """
+    Helper function to aggregate data provided as a series by a model run into a scalar.
+    Implements different weighting for the different entries.
+
+    :param data: the data as output by the simulation run (as time series)
+    :param specialMode: parameter to indicate a weighting function. If none is provided, the average is calculated
+    :return: A single scalar to describe the performance of the simulation.
+    """
     dictData = eval(data)
     if(specialMode):
         if(specialMode == 'weightedCumulativeAnnualAdoptionDelta'):
@@ -27,11 +34,18 @@ def aggregateData(data, specialMode=None):
         print('hasntAttr')
         print(dictData)
 
-
-# function to run the (repo-based current) version of the model instance with the conversation
-# given in the input file
-# TODO adjust documentation
 def invokeJar(inputFile, modeParameters, model, shellFlag):
+    """
+    Function to invoke a jar-based model file based on the parameters provided.
+    Selects the file and creates the invokation command based on the model specified.
+    Returns the performance of the run and aggregates it if necessary
+
+    :param inputFile: the file specifying the configuration of the respective simulation run as required by the model
+    :param modeParameters: additional parameters required for the run of the respective model
+    :param model: the model to execute the simulation for
+    :param shellFlag: the shellFlag for the execution of the jar
+    :return: the performance of the model run
+    """
     try:
         if(modeParameters == 'weightedCumulativeAnnualAdoptionDelta' and model == 'PVact'):
             data = check_output(PVactModelHelper.constructInvokationCommand('PVact_weightedCumulativeAnnualAdoptionDelta', {'inputFile': inputFile}),
@@ -39,8 +53,7 @@ def invokeJar(inputFile, modeParameters, model, shellFlag):
             return aggregateData(data, 'weightedCumulativeAnnualAdoptionDelta')
         elif(model == 'PVact'):
             print('using file ' + inputFile)
-            data = check_output(
-                PVactModelHelper.constructInvokationCommand('PVact_internal', {'inputFile': inputFile}), shell=shellFlag).decode('utf-8').rstrip()
+            data = check_output(PVactModelHelper.constructInvokationCommand('PVact_internal', {'inputFile': inputFile, 'modeParameters': modeParameters}), shell=shellFlag).decode('utf-8').rstrip()
             print(data)
             if (len(data.split('{')) > 1):
                 return aggregateData(data)
@@ -51,21 +64,31 @@ def invokeJar(inputFile, modeParameters, model, shellFlag):
         print(e)
         sys.exit()
 
+def invokeJarExternalData(inputFile, modeParameters, shellFlag, dataDirPath):
+    """
+    Function to invoke a jar-based model file with an external data directory based on the parameters provided.
+    Selects the file and creates the invocation command based on the model specified.
+    Returns the performance of the run and aggregates it if necessary.
+    For the PVact_external mode, the path to GNU plot must be provided (as gnuPlotPath in the modeParameters)
 
-# function to run the (repo-based current) version of the model instance with the conversation
-# given in the input file
-# TODO document
-def invokeJarExternalData(inputFile, modeParameters, shellFlag, externalPath):
+    :param inputFile: the file specifying the configuration of the respective simulation run as required by the model
+    :param modeParameters: additional parameters required for the run of the respective model
+    :param model: the model to execute the simulation for
+    :param shellFlag: the shellFlag for the execution of the jar
+    :param dataDirPath: path to the external data directory to be used
+    :return: the performance of the model run
+    """
     try:
         if(modeParameters == 'weightedCumulativeAnnualAdoptionDelta'):
-            data = check_output( PVactModelHelper.constructInvokationCommand('PVact_weightedCumulativeAnnualAdoptionDelta_external', {'externalPath': externalPath})
+            data = check_output( PVactModelHelper.constructInvokationCommand('PVact_weightedCumulativeAnnualAdoptionDelta_external', {'dataDirPath': dataDirPath})
                ,
                 shell=shellFlag).decode('utf-8').rstrip()
             return aggregateData(data, 'weightedCumulativeAnnualAdoptionDelta')
         else:
             print('using file ' + inputFile)
+            # modeParameter needs to contain the gnuFilePath in order for this to work
             data = check_output(
-               PVactModelHelper.constructInvokationCommand('PVact_external', {'inputFile': inputFile, 'externalPath': externalPath, 'modeParameters': modeParameters}), shell = shellFlag).decode('utf-8').rstrip()
+               PVactModelHelper.constructInvokationCommand('PVact_external', {'inputFile': inputFile, 'dataDirPath': dataDirPath, **modeParameters}), shell = shellFlag).decode('utf-8').rstrip()
             print(data)
             if (len(data.split('{')) > 1):
                 return aggregateData(data)

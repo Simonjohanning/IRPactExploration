@@ -1,15 +1,18 @@
-baseInputFile = 'src/resources/scenario-dresden-full'
+baseInputFile = 'resources/scenarios/scenario-dresden-full'
 
 gds_defaults = {
     'AP': 5,
     'IP': 1,
-    'inputFile': 'resources/scenario-dresden-full.json'
+    'inputFile': 'resources/scenarios/scenario-dresden-full.json'
 }
 defaultInterestThreshold = 22
 
 pointListFile = 'src/resources/pointList'
 templateFile = 'src/modelInputFiles/changedInterest'
 defaultInputFile = 'src/resources/input-scenario-dresden-partial.json'
+outputDataFile = 'images/JaehrlicheKumulierteAdoptionenVergleich-data.csv'
+optimizationBounds = {'minAdoptionThreshold': 0.0, 'maxAdoptionThreshold': 1.0, 'minInterestThreshold': 0, 'maxInterestThreshold': 128}
+
 
 testScenarioData = [[{46: {'Dresden_optimistic': 411,
                                                                   'Dresden_pessimistic': 640},

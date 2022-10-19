@@ -22,14 +22,24 @@ import PVactModelHelper
 # module to initialize the optimization process.
 # Serves to isolate the functionality of the individual optimization methods from the data.
 
-# Function to invoke the simulation execution methods based on the specified execution method.
-# Selects and prepares the data for the non-optimization-based execution methods detailed below or invokes the respective optimization method.
-# Implemented execution methods not directly bound in optimization are:
-#   pvactval: generates the data and statistics for several instances of the scenarios based on the scenario list
-#   multipleRuns: runs simulations for a specified number of repetitions for the same parameters and stores the results
-#   plotRuns: plotRuns executes and plots single runs specified in the runFile
 # TODO ensure parameters contains model for specific-gds stuff
 def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag):
+    """
+    Function to invoke the simulation execution methods based on the specified execution method.
+    Selects and prepares the data for the non-optimization-based execution methods detailed below or invokes the respective optimization method.
+    Implemented execution methods not directly bound in optimization are:
+       pvactval: generates the data and statistics for several instances of the scenarios based on the scenario list
+       multipleRuns: runs simulations for a specified number of repetitions for the same parameters and stores the results
+       plotRuns: plotRuns executes and plots single runs specified in the runFile
+    The parameters for the respectives models are documented in the readme file.
+
+    :param model:
+    :param errorDefinition:
+    :param executionMethod:
+    :param parameters:
+    :param plotFlag:
+    :return:
+    """
     if (executionMethod == 'pvactval'):
         if ('noRepetitions' in parameters and 'scenarioList' in parameters and 'resolution' in parameters and 'lowerBoundAT' in parameters and 'upperBoundAT' in parameters and 'lowerBoundIT' in parameters and 'upperBoundIT' in parameters and 'AP' in parameters and 'IP' in parameters):
             scenarioFiles = parameters['scenarioList'].split(',')
@@ -55,7 +65,7 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
             print('IP' in parameters)
     elif (executionMethod == 'multipleRuns'):
         for index in range(int(parameters['noRuns'])):
-            runAndPlot(model, parameters, errorDefinition, 'run' + str(index))
+            singleRunAndPlot(parameters, errorDefinition, 'run' + str(index))
             #TODO delete print('written out in file plots/' + errorDefinition + '-' + str(parameters['AP']) + '-' + str(
                 # parameters['IP']) + '-' + str(parameters['AP']) + '-' + str(parameters['IT']) + '-runError-' + str(
                 # index) + '.png')
@@ -64,10 +74,13 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
             # go through all runs in file and do single runs with consecutive plot
             with open('src/' + parameters['runFile'], 'r') as file:
                 for line in file:
-                    runAndPlot(eval(line), parameters, errorDefinition, '')
+                    singleRunAndPlot({**parameters, **eval(line)}, errorDefinition, '')
     elif (executionMethod == 'PVact_forwardRuns'):
         scenarioFiles = parameters['scenarioList'].split(',')
         createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), float(parameters['resolution']), errorDefinition, float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']), {'AP': float(parameters['AP']), 'IP': float(parameters['IP']), 'model': 'PVact'})
+    elif (executionMethod == 'runAndPlot'):
+        print('in runAndPlot')
+        singleRunAndPlot({**parameters, 'model': model}, errorDefinition, '')
     else:
         runOptimization(errorDefinition, executionMethod, parameters, plotFlag)
 
@@ -92,9 +105,9 @@ def runOptimization(errorDefinition, optimizationMethod, parameters, plotFlag):
         optimizationWrapper = IRPactValWrapper.IRPactValWrapperRMSE()
     # include https://pypi.org/project/metaheuristic-algorithms-python/
     if (optimizationMethod == 'gridDepthSearch'):
-        gridDepthSearch(errorDefinition, parameters, plotFlag)
+        executeGridDepthSearch(errorDefinition, parameters, plotFlag)
     elif (optimizationMethod == 'neighborRefiningSearch'):
-        neighborRefiningSearch.neighborRefining(errorDefinition, parameters['inputFile'])
+        neighborRefiningSearch.neighborRefining(errorDefinition, parameters['model'], parameters['inputFile'])
     elif (optimizationMethod == 'harmonySearch'):
         runHarmonySearch(optimizationWrapper, parameters, objective)
     elif (optimizationMethod == 'firefly'):
@@ -108,8 +121,7 @@ def runOptimization(errorDefinition, optimizationMethod, parameters, plotFlag):
     else:
         print('method ' + optimizationMethod + ' is not known. Please provide a valid method')
 
-# TODO make less model-specific
-def gridDepthSearch(errorDefinition, parameters, plotFlag):
+def executeGridDepthSearch(errorDefinition, parameters, plotFlag):
     # the grid depth search iteratively samples smaller / finer regions of the parameter space
     # equidistantly until close enough to the reference time series or a given number of iterations are reached
     # parameters are the acceptableDelta, maxDepth, scaleFactor, resolution and errorDefinition;
@@ -126,22 +138,26 @@ def gridDepthSearch(errorDefinition, parameters, plotFlag):
         acceptableDelta = parameters['acceptableDelta'] if ('acceptableDelta' in parameters) else \
             configuration.gds_defaults['acceptableDelta']
         inputFile = parameters['inputFile'] if ('inputFile' in parameters) else configuration.gds_defaults['inputFile']
-        lowerBoundX = parameters['lowerBoundX'] if ('lowerBoundX' in parameters) else configuration.optimizationBounds[
-            'minAdoptionThreshold']
-        upperBoundX = parameters['upperBoundX'] if ('upperBoundX' in parameters) else configuration.optimizationBounds[
-            'maxAdoptionThreshold']
-        lowerBoundY = parameters['lowerBoundY'] if ('lowerBoundY' in parameters) else configuration.optimizationBounds[
-            'minInterestThreshold']
-        upperBoundY = parameters['upperBoundY'] if ('upperBoundY' in parameters) else configuration.optimizationBounds[
-            'maxInterestThreshold']
-        optimizationResult = gridDepthSearch.iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution,
-                                                                    errorDefinition, parameters, inputFile, lowerBoundX,
-                                                                    upperBoundX, lowerBoundY, upperBoundY)
-        print(optimizationResult)
-        # TODO make file prefix more general
+        # model=specific parameters
+        lowerBoundX = None
+        upperBoundX = None
+        lowerBoundY = None
+        upperBoundY = None
         modelPrefix = None
         if(parameters['model'] == 'PVact'):
+            lowerBoundX = parameters['lowerBoundX'] if ('lowerBoundX' in parameters) else configurationPVact.optimizationBounds[
+                'minAdoptionThreshold']
+            upperBoundX = parameters['upperBoundX'] if ('upperBoundX' in parameters) else configurationPVact.optimizationBounds[
+                'maxAdoptionThreshold']
+            lowerBoundY = parameters['lowerBoundY'] if ('lowerBoundY' in parameters) else configurationPVact.optimizationBounds[
+                'minInterestThreshold']
+            upperBoundY = parameters['upperBoundY'] if ('upperBoundY' in parameters) else configurationPVact.optimizationBounds[
+                'maxInterestThreshold']
             modelPrefix = PVactModelHelper.deriveFilePrefix(parameters)
+        else:
+            raise NotImplementedError('model ' + parameters['model'] + ' is not implemented.')
+        optimizationResult = gridDepthSearch.iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, errorDefinition, parameters, inputFile, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY)
+        print(optimizationResult)
         simulationPlotter.saveAndPlotEvaluationData(optimizationResult['evaluationData'],
                                                     modelPrefix, errorDefinition, plotFlag)
 
@@ -290,22 +306,33 @@ def runGeneticAltgorithm(optimizationWrapper, parameters, objective):
         print(result["best_decision_variable_values"][1])  # y value: Example: 0.9988
         print(result["best_objective_function_value"])  # f(x,y) value: Example: 0.0563
 
-# Function to execute a single run and to plot the results based on the cumulated adoptions
-# for the simulation and the reference data for the simulated years.
-# TODO tidy up, make more abstract and name properly
-def runAndPlot(model, parameters, errorDefinition, nameAppend):
-    if (model == 'PVact'):
+
+def singleRunAndPlot(parameters, errorDefinition, plotfileSuffix):
+    """
+    # Function to execute a single run and to plot the results based on the cumulated adoptions
+    # for the simulation and the reference data for the simulated years.
+    # Saves the image of the plot in the plot folder with a file name based on the parameters
+
+    :param parameters: dictionary containing at least parameters required for generating JSON & executing the model (see documentation)
+    :param errorDefinition: the error definition for the model result
+    :param plotfileSuffix: suffix for naming the resulting image file
+    :return: -
+    """
+    # set the required strings by the model based on model requirements
+    configurationFile = None
+    plotfileRootname = None
+    outputDataFile = None
+    if (not 'model' in parameters):
+        raise KeyError('Key "model" not provided in the parameters')
+    elif (parameters['model'] == 'PVact'):
         configurationFile = PVactModelHelper.prepareJSONRand(parameters)
-
-
-    # ToDo change back or make more elegant (randomness)
-
-    returnData = simulationRunner.invokeJar(configurationFile,parameters['errorDef'], True)
-    print('finished run with configuration AP: ' + str(parameters['adoptionThreshold']) + ', IP: ' + str(
-        parameters['interestThreshold']) + ', AP: ' + str(parameters['AP']) + ', IP: ' + str(parameters['IP']) + ' and error ' + str(returnData))
-    simulationRunner.navigateToTop()
-    simulationPlotter.plotCumulatedAdoptions('images/JaehrlicheKumulierteAdoptionenVergleich-data.csv', 'plots/' + errorDefinition + '-' + str(parameters['AP']) + '-' + str(
-            parameters['IP']) + '-' + str(parameters['adoptionThreshold']) + '-' + str(parameters['interestThreshold']) + '-' + str(returnData) + '-' + nameAppend + '.png')
+        plotfileRootname = PVactModelHelper.generateRootname(parameters)
+        outputDataFile = configurationPVact.outputDataFile
+    if(configurationFile and plotfileRootname and outputDataFile):
+        returnData = simulationRunner.invokeJar(configurationFile, parameters['errorDef'], parameters['model'], True)
+        simulationPlotter.plotCumulatedAdoptions(outputDataFile, 'plots/' + errorDefinition + '-' + plotfileRootname + '-' + str(returnData) + '-' + plotfileSuffix + '.png')
+    else:
+        raise NotImplementedError('Mandatory model-specific data has not been set. This might be an omission')
 
 # Function to schedule, run and analyse a set of runs based on the parameters and scenarios provided
 def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, specificParameters):
@@ -327,7 +354,7 @@ def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lower
         for currentScenario in scenarioFiles:
             jarPath = None
             if(specificParameters['model'] == 'PVact'):
-                modeParameters = {'adoptionThreshold': indexX, 'interestThreshold': indexY, 'currentSeed': currentSeed}
+                modeParameters = {'adoptionThreshold': currentX, 'interestThreshold': currentY, 'currentSeed': currentSeed}
                 modeParameters['AP'] = int(specificParameters['AP']) if 'AP' in specificParameters else configurationPVact.gds_defaults['AP']
                 modeParameters['IP'] = int(specificParameters['IP']) if 'IP' in specificParameters else configurationPVact.gds_defaults['IP']
                 jarPath = simulationRunner.prepareJson(currentScenario, 'PVact', modeParameters, configuration.scenarioPath + currentScenario + '.json')

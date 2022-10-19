@@ -8,7 +8,10 @@ import PVactModelHelper
 # calculates the parameters for equidistant sampling in the respective parameter region
 # number of samples is given by the resolution (entry in searchParameters dictionary),
 # region is defined through the min and max of the X and Y parameters
-def calculateGrid(searchParameters, minX, maxX, minY, maxIT, model):
+def calculateGrid(searchParameters, minX, maxX, minY, maxIT):
+    if(not 'model' in searchParameters):
+        raise KeyError('Parameter model not specified for grid calculation')
+    model = searchParameters['model']
     list = [[0 for col in range(searchParameters['resolution'])] for row in range(searchParameters['resolution'])]
     performanceEvaluation = [0 for run in range(int(math.pow(searchParameters['resolution'], 2)))]
     # prepare the grid for the simulation errors (2D list entries)
@@ -23,7 +26,7 @@ def calculateGrid(searchParameters, minX, maxX, minY, maxIT, model):
                 parameters = searchParameters
                 parameters['adoptionThreshold'] = currentX
                 parameters['interestThreshold'] = currentY
-                inputFile = PVactModelHelper.prepareJsonRand(parameters)
+                inputFile = PVactModelHelper.prepareJSONRand(parameters)
             elif(model == None):
                 raise KeyError('Error: model not set.')
             else:
@@ -67,7 +70,7 @@ def calculateGrid(searchParameters, minX, maxX, minY, maxIT, model):
 #   upperBoundY: the high end of the y dimension to search in
 def nextDepthSearchIteration(searchParameters, searchState):
     # if the last results are close enough to quality standards or 'too many' iterations have been performed, the search terminates
-    if (searchState['currentDelta'] <= searchParameters['acceptableDelta'] or searchState['currentRecursionDepth'] >= searchParameters['maxDepth']):
+    if (searchState['currentDelta'] <= float(searchParameters['acceptableDelta']) or searchState['currentRecursionDepth'] >= int(searchParameters['maxDepth'])):
         return searchState
     else:
         if(searchParameters['printFlag']):
@@ -124,18 +127,9 @@ def nextDepthSearchIteration(searchParameters, searchState):
 # returns the state of the iteration that terminates the search
 # TODO document the parameters
 def iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, errorDefinition, specificSearchParameters, inputFile, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY):
-    print(f"Running simulation with parameters \n acceptableDelta: {acceptableDelta} \n maxDepth {maxDepth} \n scaleFactor {scaleFactor} \n resolution {resolution} \n errorDefinition {errorDefinition} \n lowerBoundAT {lowerBoundAT} \n upperBoundAT {upperBoundAT} \n lowerBoundIT {lowerBoundIT} \n upperBoundIT {upperBoundIT} ")
     # clean the folder of former modelInputFiles
     #check_output(['rm', 'src/modelInputFiles/*.json', '-r'], shell=True)
-    searchParameters = specificSearchParameters
-    searchParameters['acceptableDelta']: float(acceptableDelta)
-    searchParameters['maxDepth']: int(maxDepth)
-    searchParameters['scaleFactor']: float(scaleFactor)
-    searchParameters['resolution']: int(resolution)
-    searchParameters['printFlag']: True
-    searchParameters['errorDefinition']: errorDefinition
-    searchParameters['inputFile']: inputFile
-    return nextDepthSearchIteration(searchParameters,
+    return nextDepthSearchIteration({**specificSearchParameters, 'acceptableDelta': float(acceptableDelta), 'maxDepth': int(maxDepth), 'scaleFactor': float(scaleFactor), 'resolution': int(resolution), 'printFlag': True, 'errorDefinition': errorDefinition, 'inputFile': inputFile},
         {
         'currentDelta': 999999,
         'currentRecursionDepth': 0,

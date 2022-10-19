@@ -109,13 +109,19 @@ def setParameters(opts):
         elif o == '--lowerBoundAT':
             parameters['lowerBoundAT'] = a
         elif o == '--upperBoundAT':
-         parameters['upperBoundAT'] = a
+            parameters['upperBoundAT'] = a
         elif o == '--lowerBoundIT':
             parameters['lowerBoundIT'] = a
         elif o == '--upperBoundIT':
             parameters['upperBoundIT'] = a
         elif o == '--inputFile':
             parameters['inputFile'] = a
+        elif o == '--model':
+            parameters['model'] = a
+        elif o == '--adoptionThreshold':
+            parameters['adoptionThreshold'] = a
+        elif o == '--interestThreshold':
+            parameters['interestThreshold'] = a
         else:
             raise NotImplementedError('unrecognized parameter ' + str(o))
     return parameters

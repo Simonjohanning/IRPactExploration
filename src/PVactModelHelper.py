@@ -3,6 +3,7 @@ import json
 import configurationPVact
 import random
 import helper
+import os
 
 # Module with a number of helper files specific to the structure of the IRPact model jar.
 # Encapsulates the IRPact-specific knowledge and format to expose it to the more general interface
@@ -12,30 +13,30 @@ import helper
 # TODO document and make less system-specific
 def constructInvokationCommand(mode, param):
     if(mode == 'PVact_weightedCumulativeAnnualAdoptionDelta'):
-        return ['java', '-jar', 'src/resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', param['inputFile'] + '.json', '-o',
-         'simulationFiles/example-output.json',
-         '--noConsole', '--logPath', 'simulationFiles/log.log', '--calculatePerformance', 'cumulativeAnnualAdoptionDelta']
+        return ['java', '-jar', 'resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', param['inputFile'] + '.json', '-o',
+         'resources/simulationFiles/example-output.json',
+         '--noConsole', '--logPath', 'resources/simulationFiles/log.log', '--calculatePerformance', 'cumulativeAnnualAdoptionDelta']
     elif(mode == 'PVact_internal'):
-        return ['java', '-jar', 'src/resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i',  param['inputFile'] + '.json', '-o',
-         'simulationFiles/example-output.json',
-         '--noConsole', '--logPath', 'simulationFiles/log.log', '--calculatePerformance',  param['modeParameters'], '--gnuplotCommand',
+        return ['java', '-jar', 'resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i',  param['inputFile'] + '.json', '-o',
+         'resources/simulationFiles/example-output.json',
+         '--noConsole', '--logPath', 'resources/simulationFiles/log.log', '--calculatePerformance',  param['modeParameters'], '--gnuplotCommand',
          'C:/Users/mai11dlx/gnuplot/bin/gnuplot.exe']
     elif(mode == 'PVact_weightedCumulativeAnnualAdoptionDelta_external'):
-        return ['java', '-jar', 'src/resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', param['inputFile'] + '.json', '-o',
-         'simulationFiles/example-output.json',
-         '--noConsole', '--logPath', 'simulationFiles/log.log', '--calculatePerformance', 'cumulativeAnnualAdoptionDelta', '--dataDir',
-         param['externalPath']]
+        return ['java', '-jar', 'resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', param['inputFile'] + '.json', '-o',
+         'resources/simulationFiles/example-output.json',
+         '--noConsole', '--logPath', 'resources/simulationFiles/log.log', '--calculatePerformance', 'cumulativeAnnualAdoptionDelta', '--dataDir',
+         param['dataDirPath']]
     elif(mode == 'PVact_external'):
-        return ['java', '-jar', 'src/resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', param['inputFile'] + '.json', '-o',
-         'simulationFiles/example-output.json',
-         '--noConsole', '--logPath', 'simulationFiles/log.log', '--calculatePerformance', param['modeParameters'], '--gnuplotCommand',
-         'C:/Users/mai11dlx/gnuplot/bin/gnuplot.exe', '--dataDir', param['externalPath']]
+        return ['java', '-jar', 'resources/IRPact-1.0-SNAPSHOT-uber.jar', '-i', param['inputFile'] + '.json', '-o',
+         'resources/simulationFiles/example-output.json',
+         '--noConsole', '--logPath', 'resources/simulationFiles/log.log', '--calculatePerformance', param['modeParameters'], '--gnuplotCommand',
+         param['gnuPlotPath'], '--dataDir', param['dataDirPath']]
 
 # Function to prepare the shipped JSON file to adjust it to individual runs.
 # Changes some parameters in the file and returns the name stub to the input file
 # TODO document
 def prepareJSON(templateFile, inputFile, currentIT, currentAT, AP , IP, currentSeed):
-    helper.navigateToTop()
+    #helper.navigateToTop()
     f = open(inputFile, "r")
     fileData = json.loads(f.read())
     fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['INTEREST_THRESHOLD'][
@@ -72,7 +73,6 @@ def prepareJSONRand(parameters):
     IP = int(parameters['IP']) if 'IP' in parameters else configurationPVact.gds_defaults['IP']
     if ('adoptionThreshold' in parameters and 'interestThreshold'):
         templateFile = parameters['inputFile'] if 'inputFile' in parameters else configurationPVact.baseInputFile
-        helper.navigateToTop()
         f = open(templateFile + '.json', "r")
         fileData = json.loads(f.read())
         fileData['years'][0]['sets']['set_InDiracUnivariateDistribution']['INTEREST_THRESHOLD'][
@@ -86,10 +86,10 @@ def prepareJSONRand(parameters):
         fileData['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
             'par_InCommunicationModule3_actionnode3_awarePoints'] = 0
         fileData['years'][0]['scalars']['sca_InGeneral_seed'] = random.randint(0, 99999)
-        print('writing file with AP ' + AP + ' and IP ' + IP + ' and AT ' + parameters['adoptionThreshold'] + ' and IT ' + parameters['interestThreshold'])
-        with open(templateFile + "-" + parameters['adoptionThreshold'][2:len(parameters['adoptionThreshold'])] + "-" + parameters['interestThreshold'] + ".json", "w") as file:
+        print('writing file with AP ' + str(AP) + ' and IP ' + str(IP) + ' and AT ' + str(parameters['adoptionThreshold']) + ' and IT ' + str(parameters['interestThreshold']))
+        with open(templateFile + "-" + parameters['adoptionThreshold'] + "-" + parameters['interestThreshold'] + ".json", "w") as file:
             json.dump(fileData, file, indent=2)
-        return configurationPVact.baseInputFile + '-' + str(parameters['adoptionThreshold'])[2:len(str(parameters['adoptionThreshold']))] + '-' + str(parameters['interestThreshold'])
+        return configurationPVact.baseInputFile + '-' + str(parameters['adoptionThreshold']) + '-' + str(parameters['interestThreshold'])
     else:
         print('error! Missing parameters adoptionThreshold, interestThreshold, AP and/or IP in preparing files for PVact')
 
@@ -98,3 +98,17 @@ def deriveFilePrefix(parameters):
     AP = parameters['AP'] if 'AP' in parameters else configurationPVact.gds_defaults['AP']
     IP = parameters['IP'] if 'IP' in parameters else configurationPVact.gds_defaults['IP']
     return 'src/resources/gridDepthSearch-' + str(AP) + str(IP) + '0-'
+
+
+def generateRootname(parameters):
+    """
+    Function to generate a root string for file naming in the model PVact.
+    Uses the AP, IP and the adoption and interest threshold to generate name stubs
+
+    :param parameters: dictionary of parameters containing at least AP, IP, adoptionThreshold and interestThreshold
+    :return: string concatination separated by hyphens
+    """
+    if(not ('AP' and parameters and 'IP' in parameters and 'adoptionThreshold' in parameters and 'interestThreshold' in parameters)):
+        raise KeyError('No parameter provided for AP, IP, adoptionThreshold or interestThreshold')
+    else:
+        return str(parameters['AP']) + '-' + str(parameters['IP']) + '-' + str(parameters['adoptionThreshold']) + '-' + str(parameters['interestThreshold'])
