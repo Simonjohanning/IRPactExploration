@@ -1,10 +1,13 @@
+"""
+Module to analyse scenarios runs based on provided data.
+Function calculate and plot different comparisons between scenarios on the basis of performance metrics.
+"""
 
-#
-# TODO generalize and document
+# TODO generalize to more than two scenarios
 def analyseScenarioPerformance(parameterPerformance, lowBoundX, highBoundX, lowBoundY, highBoundY, scenarios):
     """
     Function to analyse the performance of different scenarios by a set of metrics.
-    Analysed performance metrics are averages, min/max spread and ...
+    Analysed performance metrics are averages and min/max spread between a reference and an instrument scenario.
     The analysis is done on the basis of data for the analysed scenarios in an equally spaced parameter grid delimited
     by the parameters provided.
     Analysed parameters are:
@@ -12,7 +15,7 @@ def analyseScenarioPerformance(parameterPerformance, lowBoundX, highBoundX, lowB
      - average difference & scenario averages
      - absolute spread (scenario-wide max/min), relative spread (scenario-wide max/min normalized by parameter average)
      All data is written in the scenarioDeltaAnalysis file,
-     whereas averages and spreads for all paramters are written in individual files
+     whereas averages and spreads for all parameters are written in individual files
 
     :param parameterPerformance: A two-dimensional array of entries that comprise comparable runs.
     Comparable runs are indexed with the seed they were initialized with and are dictionaries of the scenarios and
@@ -22,9 +25,8 @@ def analyseScenarioPerformance(parameterPerformance, lowBoundX, highBoundX, lowB
     :param lowBoundY: The minimal parameter value for the Y dimension of the parameter grid
     :param highBoundY: The maximal parameter value for the Y dimension of the parameter grid
     :param scenarios: The list of simulated scenarios
-    :return:
+    :return: A list containing analysis for every parameter combination between the scenarios comprising the x and y coordinates and the average, maxSpread, minSpread, maxSpreadRelative, minSpreadRelative between the cases as well as the baseCaseAverage and the instrumentCaseAverage
     """
-    #print('performance for ' + str(len(parameterPerformance)) + 'Xs and ' + str(len(parameterPerformance[0])) + ' Ys with entries like ' + str(parameterPerformance[0][0]))
     scenarioDeltaAverages = open('src/resources/scenarioDeltaAverages', 'w')
     scenarioDeltaMinSpread = open('src/resources/scenarioDeltaMinSpread', 'w')
     scenarioDeltaMaxSpread = open('src/resources/scenarioDeltaMaxSpread', 'w')

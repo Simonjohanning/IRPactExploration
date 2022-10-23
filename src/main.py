@@ -1,8 +1,6 @@
-import os
 import sys
 import getopt
 import simulationManager
-import simulationRunner
 import quickLauncher
 import helper
 import os
@@ -14,13 +12,14 @@ if __name__ == '__main__':
     print(os.getcwd())
     argv = sys.argv[1:]
     # TODO include new parameters for MHs
-    opts, args = getopt.getopt(argv, 'd:e:msr', ['acceptableDelta=', 'delta=', 'errorDef=', 'maxDepth=', 'scaleFactor=', 'resolution=', 'AT=', 'IT=', 'method=', 'AP=', 'IP=', 'runFile=', 'noRuns=', 'noRepetitions=', 'scenarioList=', 'lowerBoundAT=', 'upperBoundAT=', 'lowerBoundIT=', 'upperBoundIT=', 'inputFile=', 'model=', 'adoptionThreshold=', 'interestThreshold='] )
+    opts, args = getopt.getopt(argv, 'd:e:msr', ['acceptableDelta=', 'delta=', 'errorDef=', 'maxDepth=', 'scaleFactor=', 'resolution=', 'AT=', 'IT=', 'method=', 'AP=', 'IP=', 'runFile=', 'noRuns=', 'noRepetitions=', 'scenarioList=', 'lowerBoundAT=', 'upperBoundAT=', 'lowerBoundIT=', 'upperBoundIT=', 'inputFile=', 'model=', 'adoptionThreshold=', 'interestThreshold=', 'quickLaunch='] )
     parameters = helper.setParameters(opts)
-    quickLauncher.quickLaunch(parameters)
-    # TODO make safe
-    if ('errorDef' in parameters and 'method' in parameters):
-        print(parameters)
-        # invokation of the search
-        simulationManager.runSimulations(parameters['model'], parameters['errorDef'], parameters['method'], parameters, True)
+    if(('quickLaunch' in parameters) and (parameters['quickLaunch'] == True)):
+        quickLauncher.quickLaunch(parameters)
     else:
-        print('Please provide parameters errorDef and method')
+        if ('errorDef' in parameters and 'method' in parameters and 'model' in parameters):
+            print(parameters)
+            # invocation of the search
+            simulationManager.runSimulations(parameters['model'], parameters['errorDef'], parameters['method'], parameters, True)
+        else:
+            print('Please provide parameters errorDef, model and method')

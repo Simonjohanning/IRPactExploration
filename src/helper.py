@@ -1,22 +1,41 @@
-import json
-import os
+"""
+    Module to bundle several model-agnostic helper functions
+"""
 
-# Simple helper function to determine the number of (line-based) data points in the specified file
+import json
+
 def determineDataPoints(dataPath):
+    """
+    Simple helper function to determine the number of (line-based) data points in the specified file.
+
+    :param dataPath: path to the file to count the number of lines
+    :return: the number of lines in the file
+    """
     with open(dataPath, 'r') as file:
         return (len(file.readlines()))
 
-# Helper function to extract the total number of cumulated adoptions from the provided file
 # @TODO make more general
 def extractData(path):
+    """
+    Helper function to extract the total number of cumulated adoptions from the provided file.
+    The file needs to follow the format ['cumulated']['total']
+
+    :param path: Path to the file to extract
+    :return: The total number of cumulated adoptions as specified in the file.
+    """
     f = open(path, "r")
     fileData = json.loads(f.read())
     return fileData['cumulated']['total']
 
 
-# Function that sets the parameter map based on the inline parameters the script was invoked with.
-# The function reads the inline parameters and assigns them to the respective parameter
 def setParameters(opts):
+    """
+    Function that sets the parameter map based on the inline parameters the script was invoked with.
+    The function reads the inline parameters and assigns them to the respective parameter.
+
+    :param opts: command-line parameter tuple list containing the arguments the program was invoked for
+    :return: A dictionary of the arguments provided
+    """
     print(opts)
     parameters = {}
     for o, a in opts:
@@ -122,23 +141,32 @@ def setParameters(opts):
             parameters['adoptionThreshold'] = a
         elif o == '--interestThreshold':
             parameters['interestThreshold'] = a
+        elif o == '--quickLaunch':
+            parameters['quickLaunch'] = a
         else:
             raise NotImplementedError('unrecognized parameter ' + str(o))
     return parameters
 
-# TODO make more general
-def navigateToTop():
-    currentDir = os.getcwd().split('\\')[-1]
-    #print(currentDir)
-    if (currentDir == 'C:\\'):
-        os.chdir('Users\mai11dlx\PycharmProjects\IRPactExploration')
-    elif (not currentDir == 'IRPactExploration'):
-        print('current dir is ' + os.getcwd() + '; navigating up')
-        os.chdir('../')
-        navigateToTop()
+# # TODO check if it can be removed
+# def navigateToTop():
+#     currentDir = os.getcwd().split('\\')[-1]
+#     #print(currentDir)
+#     if (currentDir == 'C:\\'):
+#         os.chdir('Users\mai11dlx\PycharmProjects\IRPactExploration')
+#     elif (not currentDir == 'IRPactExploration'):
+#         print('current dir is ' + os.getcwd() + '; navigating up')
+#         os.chdir('../')
+#         navigateToTop()
 
-# TODO document and test
+# TODO test
 def printMissingParameters(parameterDictionary, parameterArray):
+    """
+    Function to print all parameters missing from in the parameter dictionary based on the parameter array.
+
+    :param parameterDictionary: Dictionary to check membership in
+    :param parameterArray: List of parameters to check in the parameter dictionary
+    :return: list of all parameters in the parameterArray that are missing in the parameterDictionary
+    """
     missingParameters = []
     for parameter in parameterArray:
         if(not parameter in parameterDictionary):
@@ -149,11 +177,19 @@ def printMissingParameters(parameterDictionary, parameterArray):
             print(parameter)
     elif(len(missingParameters) == 1):
         print('Parameter ' + missingParameters[0] + ' missing.')
+    return missingParameters
 
-# Method to translate the model-agnostic parameters into the semantics of the model
-# TODO document better
-def convertGridInMode(X, Y, mode):
-    if(mode == 'PVact'):
+def convertGridInMode(X, Y, model):
+    """
+    Method to translate the model-agnostic parameters into the semantics of the model.
+    Transforms the values into a dictionary with dimension semantics as keys.
+
+    :param X: The model parameter in abscissal dimension
+    :param Y: The model parameter in ordinatal dimension
+    :param model: The model to which semantics the coordinates should be translated
+    :return: Dictionary indexed with the dimensions in the model-sematic
+    """
+    if(model == 'PVact'):
         return {'AT': X, 'IT': Y}
     else:
-        raise NotImplementedError('Mode ' + mode + ' is not implemented')
+        raise NotImplementedError('Mode ' + model + ' is not implemented')

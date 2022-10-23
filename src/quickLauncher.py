@@ -1,8 +1,13 @@
+"""
+    Module for very specific short-hands for setting up runs.
+    Used as a shorthand for testing and development.
+"""
 import json
 import simulationManager
 import os
 
 # TODO make less hacky
+
 
 def quickLaunch(parameters):
     simulationManager.runSimulations('PVact', parameters['errorDef'], 'runAndPlot', parameters, False)

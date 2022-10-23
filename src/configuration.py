@@ -1,3 +1,7 @@
+"""
+    File to store defaults and data.
+"""
+
 gds_defaults = {
     'maxDepth':  2,
     'scaleFactor': 2,
@@ -58,6 +62,13 @@ optimizationBounds = {
 optimizationStartValues = {
     'X': 0.8,
     'Y': 12
+}
+
+plotSettings = {
+    'simulationDataLabel': 'Simulation Results',
+    'simulationDataColor': "#b02f2c",
+    'referenceDataLabel': 'Reference Data',
+    'referenceDataColor': "#8ac2d1"
 }
 
 shellFlag = False

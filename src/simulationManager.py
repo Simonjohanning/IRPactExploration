@@ -1,9 +1,17 @@
+"""
+Module to manage and setup the execution of the simulation/optimization runs.
+Provides a number of functions to invoke different simulation/optimization methods
+as well as the interface for other modules to trigger the methods based on parameters.
+Module serves to isolate the functionality of the individual optimization methods from the data.
+Imported optimization methods are taken from the metaheuristic package https://pypi.org/project/metaheuristic-algorithms-python/
+"""
+
 import math
 import gridDepthSearch
 import configuration
 import simulationRunner
 import neighborRefiningSearch
-import IRPactValWrapper
+import PVactWrapper
 from metaheuristic_algorithms.harmony_search import HarmonySearch
 from metaheuristic_algorithms.firefly_algorithm import FireflyAlgorithm
 from metaheuristic_algorithms.simplified_particle_swarm_optimization import SimplifiedParticleSwarmOptimization
@@ -19,10 +27,8 @@ import PVactModelHelper
 
 # TODO package a bunch of more concrete stuff here in a library and separate setup and execution
 
-# module to initialize the optimization process.
-# Serves to isolate the functionality of the individual optimization methods from the data.
 
-# TODO ensure parameters contains model for specific-gds stuff
+# TODO finish arguments documentation
 def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag):
     """
     Function to invoke the simulation execution methods based on the specified execution method.
@@ -31,7 +37,7 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
        pvactval: generates the data and statistics for several instances of the scenarios based on the scenario list
        multipleRuns: runs simulations for a specified number of repetitions for the same parameters and stores the results
        plotRuns: plotRuns executes and plots single runs specified in the runFile
-    The parameters for the respectives models are documented in the readme file.
+    The parameters for the respective models are documented in the readme file.
 
     :param model:
     :param errorDefinition:
@@ -44,14 +50,14 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
         if ('noRepetitions' in parameters and 'scenarioList' in parameters and 'resolution' in parameters and 'lowerBoundAT' in parameters and 'upperBoundAT' in parameters and 'lowerBoundIT' in parameters and 'upperBoundIT' in parameters and 'AP' in parameters and 'IP' in parameters):
             scenarioFiles = parameters['scenarioList'].split(',')
             print('reading ' + str(len(scenarioFiles)) + ' scenarios files ')
-            createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), int(parameters['resolution']), parameters['errorDef'], float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']),  {'AP': float(parameters['AP']), 'IP': float(parameters['IP']), 'model': 'PVact'})
+            createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), int(parameters['resolution']), parameters['errorDef'], float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']),  {'AP': float(parameters['AP']), 'IP': float(parameters['IP'])}, 'PVact')
             # TODO make less hacky and specific here
             analysisData = simulationAnalyser.analyseScenarioPerformance(configuration.testScenarioData,
                                                           float(parameters['lowerBoundAT']),
                                                           float(parameters['upperBoundAT']),
                                                           float(parameters['lowerBoundIT']),
                                                           float(parameters['upperBoundIT']), scenarioFiles)
-            simulationPlotter.plotRunStatistics(analysisData, 'relative')
+            simulationPlotter.plotRunStatistics(analysisData, 'relative', model)
         else:
             print(parameters)
             print('noRepetitions' in parameters)
@@ -66,7 +72,8 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
     elif (executionMethod == 'multipleRuns'):
         for index in range(int(parameters['noRuns'])):
             singleRunAndPlot(parameters, errorDefinition, 'run' + str(index))
-            #TODO delete print('written out in file plots/' + errorDefinition + '-' + str(parameters['AP']) + '-' + str(
+            #TODO delete
+                # print('written out in file plots/' + errorDefinition + '-' + str(parameters['AP']) + '-' + str(
                 # parameters['IP']) + '-' + str(parameters['AP']) + '-' + str(parameters['IT']) + '-runError-' + str(
                 # index) + '.png')
     elif (executionMethod == 'plotRuns'):
@@ -77,33 +84,40 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
                     singleRunAndPlot({**parameters, **eval(line)}, errorDefinition, '')
     elif (executionMethod == 'PVact_forwardRuns'):
         scenarioFiles = parameters['scenarioList'].split(',')
-        createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), float(parameters['resolution']), errorDefinition, float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']), {'AP': float(parameters['AP']), 'IP': float(parameters['IP']), 'model': 'PVact'})
+        createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), float(parameters['resolution']), errorDefinition, float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']), {'AP': float(parameters['AP']), 'IP': float(parameters['IP'])}, 'PVact')
     elif (executionMethod == 'runAndPlot'):
         print('in runAndPlot')
         singleRunAndPlot({**parameters, 'model': model}, errorDefinition, '')
     else:
         runOptimization(errorDefinition, executionMethod, parameters, plotFlag)
 
-# Function that runs the parameter optimization based on the specified parameters.
-# Individual simulations will be evaluated based on the errorDefinition with given parameters
-# and are optimized based on the specified optimizationMethod.
-# If the plotFlag is set, optimization methods using it will plot results between runs.
-# Implemented optimization methods include:
-# gridDepthSearch: optimization method where values are sampled within a grid of regular intervals that gets consecutively finer around the local minimum of the last execution
-# neighborRefiningSearch: optimization method in which the investigated parameter grid is surveyed by evaluating points in the grid are added based on the distance to evaluated points and their error term,
-# harmonySearch (from the metaheuristic algorithm package),
-# firefly (from the metaheuristic algorithm package),
-# SimplifiedParticleSwarmOptimization (from the metaheuristic algorithm package),
-# simulatedAnnealing (from the metaheuristic algorithm package),
-# geneticAlgorithm (from the metaheuristic algorithm package).
 def runOptimization(errorDefinition, optimizationMethod, parameters, plotFlag):
+    """
+    Function that runs the parameter optimization based on the specified parameters.
+    Individual simulations will be evaluated based on the errorDefinition with given parameters
+    and are optimized based on the specified optimizationMethod with the goal of error minimization
+    If the plotFlag is set, optimization methods using it will plot results between runs.
+    Implemented optimization methods include:
+        gridDepthSearch: optimization method where values are sampled within a grid of regular intervals that gets consecutively finer around the local minimum of the last execution
+        neighborRefiningSearch: optimization method in which the investigated parameter grid is surveyed by evaluating points in the grid are added based on the distance to evaluated points and their error term,
+        harmonySearch (from the metaheuristic algorithm package),
+        firefly (from the metaheuristic algorithm package),
+        SimplifiedParticleSwarmOptimization (from the metaheuristic algorithm package),
+        simulatedAnnealing (from the metaheuristic algorithm package),
+        geneticAlgorithm (from the metaheuristic algorithm package).
+
+    :param errorDefinition: the metric used to evaluate runs
+    :param optimizationMethod: the method chosen for parameter optimization
+    :param parameters: general and optimization-method specific parameters (see readme)
+    :param plotFlag: flag to indicate that the results should be plotted
+    :return:
+    """
     objective = "minimization"
     optimizationWrapper = None
     if parameters['errorDef'] == 'MAE':
-        optimizationWrapper = IRPactValWrapper.IRPactValWrapperMAE()
+        optimizationWrapper = PVactWrapper.PVactWrapperMAE()
     elif parameters['errorDef'] == 'RMSD':
-        optimizationWrapper = IRPactValWrapper.IRPactValWrapperRMSE()
-    # include https://pypi.org/project/metaheuristic-algorithms-python/
+        optimizationWrapper = PVactWrapper.PVactWrapperRMSE()
     if (optimizationMethod == 'gridDepthSearch'):
         executeGridDepthSearch(errorDefinition, parameters, plotFlag)
     elif (optimizationMethod == 'neighborRefiningSearch'):
@@ -122,10 +136,19 @@ def runOptimization(errorDefinition, optimizationMethod, parameters, plotFlag):
         print('method ' + optimizationMethod + ' is not known. Please provide a valid method')
 
 def executeGridDepthSearch(errorDefinition, parameters, plotFlag):
-    # the grid depth search iteratively samples smaller / finer regions of the parameter space
-    # equidistantly until close enough to the reference time series or a given number of iterations are reached
-    # parameters are the acceptableDelta, maxDepth, scaleFactor, resolution and errorDefinition;
-    # see function for further documentation
+    """
+    This function sets up the GridDepthSearch algorithm and triggers its execution based on the provided 
+    error metric and parameters. 
+    the grid depth search iteratively samples smaller / finer regions of the parameter space
+    equidistantly until close enough to the reference time series or a given number of iterations are reached
+    Model-agnostic parameters are the acceptableDelta, maxDepth, scaleFactor and resolution;
+    For specific models, bounds, data and the file naming are set. 
+    See Readme for further documentation
+    :param errorDefinition: a string for the error metric to be used 
+    :param parameters: dictionary containing at least the necessary parameters
+    :param plotFlag: flag to indicate if the simulation result should be plotted
+    :return: 
+    """
     if(not 'model' in parameters):
         raise KeyError('Key model not set in parameters for gridDepthSearch')
     else:
@@ -137,13 +160,13 @@ def executeGridDepthSearch(errorDefinition, parameters, plotFlag):
             'resolution']
         acceptableDelta = parameters['acceptableDelta'] if ('acceptableDelta' in parameters) else \
             configuration.gds_defaults['acceptableDelta']
-        inputFile = parameters['inputFile'] if ('inputFile' in parameters) else configuration.gds_defaults['inputFile']
         # model=specific parameters
         lowerBoundX = None
         upperBoundX = None
         lowerBoundY = None
         upperBoundY = None
         modelPrefix = None
+        inputFile = None
         if(parameters['model'] == 'PVact'):
             lowerBoundX = parameters['lowerBoundX'] if ('lowerBoundX' in parameters) else configurationPVact.optimizationBounds[
                 'minAdoptionThreshold']
@@ -153,7 +176,8 @@ def executeGridDepthSearch(errorDefinition, parameters, plotFlag):
                 'minInterestThreshold']
             upperBoundY = parameters['upperBoundY'] if ('upperBoundY' in parameters) else configurationPVact.optimizationBounds[
                 'maxInterestThreshold']
-            modelPrefix = PVactModelHelper.deriveFilePrefix(parameters)
+            modelPrefix = PVactModelHelper.deriveFilePrefixGDS(parameters)
+            inputFile = parameters['inputFile'] if ('inputFile' in parameters) else configurationPVact.baseInputFile
         else:
             raise NotImplementedError('model ' + parameters['model'] + ' is not implemented.')
         optimizationResult = gridDepthSearch.iterateGridDepthSearch(acceptableDelta, maxDepth, scaleFactor, resolution, errorDefinition, parameters, inputFile, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY)
@@ -162,6 +186,14 @@ def executeGridDepthSearch(errorDefinition, parameters, plotFlag):
                                                     modelPrefix, errorDefinition, plotFlag)
 
 def runHarmonySearch(optimizationWrapper, parameters, objective):
+    """
+    Function to manage the harmony search metaheuristic from the https://pypi.org/project/metaheuristic-algorithms-python/ package.
+    
+    :param optimizationWrapper: A model and error metric specific wrapper for the metaheuristic
+    :param parameters: A dictionary containing parameters relevant for harmony search 
+    :param objective: The optimization objective used in the metaheuristic
+    :return: 
+    """
     if optimizationWrapper is None:
         pass
     else:
@@ -188,6 +220,14 @@ def runHarmonySearch(optimizationWrapper, parameters, objective):
         print(result["best_objective_function_value"])  # f(x,y) value: Example: 0.0563
 
 def runFirefly(optimizationWrapper, parameters, objective):
+    """
+        Function to manage the firefly metaheuristic from the https://pypi.org/project/metaheuristic-algorithms-python/ package.
+
+        :param optimizationWrapper: A model and error metric specific wrapper for the metaheuristic
+        :param parameters: A dictionary containing parameters relevant for the firefly algorithm 
+        :param objective: The optimization objective used in the metaheuristic
+        :return: 
+        """
     if optimizationWrapper is None:
         pass
     else:
@@ -211,6 +251,14 @@ def runFirefly(optimizationWrapper, parameters, objective):
         print(result["best_objective_function_value"])  # f(x,y) value: Example: 0.0563
 
 def runSimplifiedParticleSwarmOptimization(optimizationWrapper, parameters, objective):
+    """
+        Function to manage the spso metaheuristic from the https://pypi.org/project/metaheuristic-algorithms-python/ package.
+
+        :param optimizationWrapper: A model and error metric specific wrapper for the metaheuristic
+        :param parameters: A dictionary containing parameters relevant for spso 
+        :param objective: The optimization objective used in the metaheuristic
+        :return: 
+        """
     if optimizationWrapper is None:
         pass
     else:
@@ -233,13 +281,21 @@ def runSimplifiedParticleSwarmOptimization(optimizationWrapper, parameters, obje
         print(result["best_objective_function_value"])  # f(x,y) value: Example: 0.0563
 
 def runSimulatedAnnealing(optimizationWrapper, parameters, objective):
+    """
+    Function to manage the simulated annealing metaheuristic from the https://pypi.org/project/metaheuristic-algorithms-python/ package.
+
+    :param optimizationWrapper: A model and error metric specific wrapper for the metaheuristic
+    :param parameters: A dictionary containing parameters relevant for simulated annealing 
+    :param objective: The optimization objective used in the metaheuristic
+    :return: 
+    """
     if optimizationWrapper is None:
         pass
     else:
         if parameters['errorDef'] == 'MAE':
-            optimizationWrapper = IRPactValWrapper.IRPactValWrapperMAESingleVariable()
+            optimizationWrapper = PVactWrapper.PVactWrapperMAESingleVariable()
         elif parameters['errorDef'] == 'RMSD':
-            optimizationWrapper = IRPactValWrapper.IRPactValWrapperRMSESingleVariable()
+            optimizationWrapper = PVactWrapper.PVactWrapperRMSESingleVariable()
         simulatedAnnealing = SimulatedAnnealing(optimizationWrapper, 1, objective)
         temperature = parameters['temperature'] if ('temperature' in parameters) else \
             configuration.simulatedAnnealing_defaults['temperature']
@@ -280,6 +336,14 @@ def runSimulatedAnnealing(optimizationWrapper, parameters, objective):
         print(result["best_objective_function_value"])  # f(x,y) value: Example: 0.0563
 
 def runGeneticAltgorithm(optimizationWrapper, parameters, objective):
+    """
+    Function to manage the genetic algorithm metaheuristic from the https://pypi.org/project/metaheuristic-algorithms-python/ package.
+
+    :param optimizationWrapper: A model and error metric specific wrapper for the metaheuristic
+    :param parameters: A dictionary containing parameters relevant for the genetic algorithm 
+    :param objective: The optimization objective used in the metaheuristic
+    :return: 
+    """
     if optimizationWrapper is None:
         pass
     else:
@@ -330,12 +394,27 @@ def singleRunAndPlot(parameters, errorDefinition, plotfileSuffix):
         outputDataFile = configurationPVact.outputDataFile
     if(configurationFile and plotfileRootname and outputDataFile):
         returnData = simulationRunner.invokeJar(configurationFile, parameters['errorDef'], parameters['model'], True)
-        simulationPlotter.plotCumulatedAdoptions(outputDataFile, 'plots/' + errorDefinition + '-' + plotfileRootname + '-' + str(returnData) + '-' + plotfileSuffix + '.png')
+        simulationPlotter.plotYearlySimulationReferenceData(outputDataFile, '../plots/' + errorDefinition + '-' + plotfileRootname + '-' + str(returnData) + '-' + plotfileSuffix + '.png', parameters['model'])
     else:
         raise NotImplementedError('Mandatory model-specific data has not been set. This might be an omission')
 
-# Function to schedule, run and analyse a set of runs based on the parameters and scenarios provided
-def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, specificParameters):
+
+def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, modelSpecificParameters, model):
+    """
+    Function to generate and execute a number of simulation executions over an equally spaced parameter region based on the parameters
+    
+    :param scenarioFiles: list of the scenarios to execute the simulation runs for
+    :param noRepetitions: the number of simulation runs for each parameter combination and scenario
+    :param granularity: the number of parameter values to span the grid over for each dimension
+    :param errorDef: the error metric to be used
+    :param lowerBoundX: the minimum value for the model parameter in the x-dimension
+    :param upperBoundX: the maximum value for the model parameter in the x-dimension
+    :param lowerBoundY: the minimum value for the model parameter in the y-dimension
+    :param upperBoundY: the maximum value for the model parameter in the x-dimension
+    :param modelSpecificParameters: simulation execution parameters specific to the model used
+    :param model: the model employed for the simuation
+    :return: A list containing analysis for every parameter combination between the scenarios comprising the x and y coordinates and the average, maxSpread, minSpread, maxSpreadRelative, minSpreadRelative between the cases as well as the baseCaseAverage and the instrumentCaseAverage
+    """
     print('creating runs')
     seedSet = set()
     parameterPerformance = [[{} for col in range(granularity)] for row in range(granularity)]
@@ -353,16 +432,16 @@ def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lower
         # For each scenario calculate and store the results
         for currentScenario in scenarioFiles:
             jarPath = None
-            if(specificParameters['model'] == 'PVact'):
+            if(modelSpecificParameters['model'] == 'PVact'):
                 modeParameters = {'adoptionThreshold': currentX, 'interestThreshold': currentY, 'currentSeed': currentSeed}
-                modeParameters['AP'] = int(specificParameters['AP']) if 'AP' in specificParameters else configurationPVact.gds_defaults['AP']
-                modeParameters['IP'] = int(specificParameters['IP']) if 'IP' in specificParameters else configurationPVact.gds_defaults['IP']
+                modeParameters['AP'] = int(modelSpecificParameters['AP']) if 'AP' in modelSpecificParameters else configurationPVact.gds_defaults['AP']
+                modeParameters['IP'] = int(modelSpecificParameters['IP']) if 'IP' in modelSpecificParameters else configurationPVact.gds_defaults['IP']
                 jarPath = simulationRunner.prepareJson(currentScenario, 'PVact', modeParameters, configuration.scenarioPath + currentScenario + '.json')
             if(jarPath):
                 simulationRunner.invokeJarExternalData(jarPath, errorDef, True, 'src/resources/dataFiles/')
             else:
                 print('Error! No model was set so no configuration file was created for this run')
-            if(specificParameters['model'] == 'PVact'):
+            if(model == 'PVact'):
                 scenarioPerformance[currentScenario] = PVactModelHelper.readAnalysisData('images/AdoptionAnalysis.json')
             print(str(scenarioPerformance))
         parameterPerformance[indexX][indexY][currentSeed] = scenarioPerformance
