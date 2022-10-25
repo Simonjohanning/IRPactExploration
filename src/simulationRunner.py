@@ -5,8 +5,8 @@ Module to prepare and execute single model runs as well as processing output dat
 import helper
 import PVactModelHelper
 from subprocess import check_output, CalledProcessError
-import json
 import sys
+import configuration
 
 # TODO remove specificity and inconsistency in the code
 def aggregateData(data, specialMode=None):
@@ -40,26 +40,26 @@ def aggregateData(data, specialMode=None):
 
 
 # TODO Make consistent in exception handling with rest of the code base
-def invokeJar(inputFile, modeParameters, model, shellFlag):
+def invokeJar(inputFile, errorDef, model, shellFlag):
     """
     Function to invoke a jar-based model file based on the parameters provided.
     Selects the file and creates the invocation command based on the model specified.
     Returns the performance of the run and aggregates it if necessary
 
     :param inputFile: the file specifying the configuration of the respective simulation run as required by the model
-    :param modeParameters: additional parameters required for the run of the respective model
+    :param errorDef: the definition of the errorMetric
     :param model: the model to execute the simulation for
     :param shellFlag: the shellFlag for the execution of the jar
     :return: the performance of the model run
     """
     try:
-        if(modeParameters == 'weightedCumulativeAnnualAdoptionDelta' and model == 'PVact'):
+        if(errorDef == 'weightedCumulativeAnnualAdoptionDelta' and model == 'PVact'):
             data = check_output(PVactModelHelper.constructInvokationCommand('PVact_weightedCumulativeAnnualAdoptionDelta', {'inputFile': inputFile}),
                 shell=shellFlag).decode('utf-8').rstrip()
             return aggregateData(data, 'weightedCumulativeAnnualAdoptionDelta')
         elif(model == 'PVact'):
             print('using file ' + inputFile)
-            data = check_output(PVactModelHelper.constructInvokationCommand('PVact_internal', {'inputFile': inputFile, 'modeParameters': modeParameters}), shell=shellFlag).decode('utf-8').rstrip()
+            data = check_output(PVactModelHelper.constructInvokationCommand('PVact_internal', {'inputFile': inputFile, 'errorDef': errorDef}), shell=shellFlag).decode('utf-8').rstrip()
             print(data)
             if (len(data.split('{')) > 1):
                 return aggregateData(data)
@@ -71,22 +71,21 @@ def invokeJar(inputFile, modeParameters, model, shellFlag):
         sys.exit()
 
 # TODO Make consistent in exception handling with rest of the code base
-def invokeJarExternalData(inputFile, modeParameters, shellFlag, dataDirPath):
+def invokeJarExternalData(inputFile, errorMode, shellFlag, dataDirPath):
     """
     Function to invoke a jar-based model file with an external data directory based on the parameters provided.
     Selects the file and creates the invocation command based on the model specified.
     Returns the performance of the run and aggregates it if necessary.
-    For the PVact_external mode, the path to GNU plot must be provided (as gnuPlotPath in the modeParameters)
 
     :param inputFile: the file specifying the configuration of the respective simulation run as required by the model
-    :param modeParameters: additional parameters required for the run of the respective model
+    :param errorMode: the mode to weigh the errors in the jar
     :param model: the model to execute the simulation for
     :param shellFlag: the shellFlag for the execution of the jar
     :param dataDirPath: path to the external data directory to be used
     :return: the performance of the model run
     """
     try:
-        if(modeParameters == 'weightedCumulativeAnnualAdoptionDelta'):
+        if(errorMode == 'weightedCumulativeAnnualAdoptionDelta'):
             data = check_output( PVactModelHelper.constructInvokationCommand('PVact_weightedCumulativeAnnualAdoptionDelta_external', {'dataDirPath': dataDirPath})
                ,
                 shell=shellFlag).decode('utf-8').rstrip()
@@ -95,7 +94,7 @@ def invokeJarExternalData(inputFile, modeParameters, shellFlag, dataDirPath):
             print('using file ' + inputFile)
             # modeParameter needs to contain the gnuFilePath in order for this to work
             data = check_output(
-               PVactModelHelper.constructInvokationCommand('PVact_external', {'inputFile': inputFile, 'dataDirPath': dataDirPath, **modeParameters}), shell = shellFlag).decode('utf-8').rstrip()
+               PVactModelHelper.constructInvokationCommand('PVact_external', {'inputFile': inputFile, 'dataDirPath': dataDirPath, 'gnuPlotPath': configuration.gnuPlotPath, 'errorDef': errorMode}), shell = shellFlag).decode('utf-8').rstrip()
             print(data)
             if (len(data.split('{')) > 1):
                 return aggregateData(data)

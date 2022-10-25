@@ -74,4 +74,6 @@ plotSettings = {
 shellFlag = False
 number_of_variables = 2
 
-scenarioPath = 'src/resources/scenarios'
+scenarioPath = 'resources/scenarios/'
+# TODO take this out of here
+gnuPlotPath = 'C:/Users/mai11dlx/gnuplot/bin/gnuplot.exe'

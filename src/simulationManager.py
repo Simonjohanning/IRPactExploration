@@ -79,7 +79,7 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
     elif (executionMethod == 'plotRuns'):
         if ('runFile' in parameters):
             # go through all runs in file and do single runs with consecutive plot
-            with open('src/' + parameters['runFile'], 'r') as file:
+            with open(parameters['runFile'], 'r') as file:
                 for line in file:
                     singleRunAndPlot({**parameters, **eval(line)}, errorDefinition, '')
     elif (executionMethod == 'PVact_forwardRuns'):
@@ -432,13 +432,13 @@ def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lower
         # For each scenario calculate and store the results
         for currentScenario in scenarioFiles:
             jarPath = None
-            if(modelSpecificParameters['model'] == 'PVact'):
+            if(model == 'PVact'):
                 modeParameters = {'adoptionThreshold': currentX, 'interestThreshold': currentY, 'currentSeed': currentSeed}
                 modeParameters['AP'] = int(modelSpecificParameters['AP']) if 'AP' in modelSpecificParameters else configurationPVact.gds_defaults['AP']
                 modeParameters['IP'] = int(modelSpecificParameters['IP']) if 'IP' in modelSpecificParameters else configurationPVact.gds_defaults['IP']
                 jarPath = simulationRunner.prepareJson(currentScenario, 'PVact', modeParameters, configuration.scenarioPath + currentScenario + '.json')
             if(jarPath):
-                simulationRunner.invokeJarExternalData(jarPath, errorDef, True, 'src/resources/dataFiles/')
+                simulationRunner.invokeJarExternalData(jarPath, errorDef, True, 'resources/dataFiles/')
             else:
                 print('Error! No model was set so no configuration file was created for this run')
             if(model == 'PVact'):

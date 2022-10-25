@@ -4,6 +4,8 @@
 """
 import math
 import json
+import os
+
 import configurationPVact
 import random
 
@@ -26,7 +28,7 @@ def constructInvokationCommand(mode, param):
     elif(mode == 'PVact_internal'):
         return ['java', '-jar', configurationPVact.modelPath, '-i',  param['inputFile'] + '.json', '-o',
          configurationPVact.defaultOutputFile,
-         '--noConsole', '--logPath', configurationPVact.defaultLogFile, '--calculatePerformance',  param['modeParameters'], '--gnuplotCommand',
+         '--noConsole', '--logPath', configurationPVact.defaultLogFile, '--calculatePerformance',  param['errorDef'], '--gnuplotCommand',
          'C:/Users/mai11dlx/gnuplot/bin/gnuplot.exe']
     elif(mode == 'PVact_weightedCumulativeAnnualAdoptionDelta_external'):
         return ['java', '-jar', configurationPVact.modelPath, '-i', param['inputFile'] + '.json', '-o',
@@ -36,7 +38,7 @@ def constructInvokationCommand(mode, param):
     elif(mode == 'PVact_external'):
         return ['java', '-jar', configurationPVact.modelPath, '-i', param['inputFile'] + '.json', '-o',
          configurationPVact.defaultOutputFile,
-         '--noConsole', '--logPath', configurationPVact.defaultLogFile, '--calculatePerformance', param['modeParameters'], '--gnuplotCommand',
+         '--noConsole', '--logPath', configurationPVact.defaultLogFile, '--calculatePerformance', param['errorDef'], '--gnuplotCommand',
          param['gnuPlotPath'], '--dataDir', param['dataDirPath']]
 
 # TODO check that file was written successfully
@@ -111,7 +113,7 @@ def prepareJSONRand(parameters):
             'par_InCommunicationModule3_actionnode3_awarePoints'] = 0
         fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_seed'] = random.randint(0, 99999)
         print('writing file with AP ' + str(AP) + ' and IP ' + str(IP) + ' and AT ' + str(parameters['adoptionThreshold']) + ' and IT ' + str(parameters['interestThreshold']))
-        with open(templateFile + "-" + parameters['adoptionThreshold'] + "-" + parameters['interestThreshold'] + ".json", "w") as file:
+        with open(templateFile + "-" + str(parameters['adoptionThreshold']) + "-" + str(parameters['interestThreshold']) + ".json", "w") as file:
             json.dump(fileData, file, indent=2)
         return configurationPVact.baseInputFile + '-' + str(parameters['adoptionThreshold']) + '-' + str(parameters['interestThreshold'])
     else:
