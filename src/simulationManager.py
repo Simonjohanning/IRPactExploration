@@ -442,7 +442,7 @@ def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lower
             else:
                 print('Error! No model was set so no configuration file was created for this run')
             if(model == 'PVact'):
-                scenarioPerformance[currentScenario] = PVactModelHelper.readAnalysisData('images/AdoptionAnalysis.json')
+                scenarioPerformance[currentScenario] = PVactModelHelper.readAnalysisData('simulationFiles/images/AdoptionAnalysis.json')
             print(str(scenarioPerformance))
         parameterPerformance[indexX][indexY][currentSeed] = scenarioPerformance
         print(str(parameterPerformance[indexX][indexY]))
