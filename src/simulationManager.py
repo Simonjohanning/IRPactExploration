@@ -393,7 +393,7 @@ def singleRunAndPlot(parameters, errorDefinition, plotfileSuffix):
         plotfileRootname = PVactModelHelper.generateRootname(parameters)
         outputDataFile = configurationPVact.outputDataFile
     if(configurationFile and plotfileRootname and outputDataFile):
-        returnData = simulationRunner.invokeJar(configurationFile, parameters['errorDef'], parameters['model'], True)
+        returnData = simulationRunner.invokeJar(configurationFile, parameters['errorDef'], parameters['model'], False)
         simulationPlotter.plotYearlySimulationReferenceData(outputDataFile, '../plots/' + errorDefinition + '-' + plotfileRootname + '-' + str(returnData) + '-' + plotfileSuffix + '.png', parameters['model'])
     else:
         raise NotImplementedError('Mandatory model-specific data has not been set. This might be an omission')
@@ -438,7 +438,7 @@ def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lower
                 modeParameters['IP'] = int(modelSpecificParameters['IP']) if 'IP' in modelSpecificParameters else configurationPVact.gds_defaults['IP']
                 jarPath = simulationRunner.prepareJson(currentScenario, 'PVact', modeParameters, configuration.scenarioPath + currentScenario + '.json')
             if(jarPath):
-                simulationRunner.invokeJarExternalData(jarPath, errorDef, True, 'resources/dataFiles/')
+                simulationRunner.invokeJarExternalData(jarPath, errorDef, False, 'resources/dataFiles/')
             else:
                 print('Error! No model was set so no configuration file was created for this run')
             if(model == 'PVact'):
