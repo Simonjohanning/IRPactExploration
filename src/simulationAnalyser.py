@@ -27,11 +27,11 @@ def analyseScenarioPerformance(parameterPerformance, lowBoundX, highBoundX, lowB
     :param scenarios: The list of simulated scenarios
     :return: A list containing analysis for every parameter combination between the scenarios comprising the x and y coordinates and the average, maxSpread, minSpread, maxSpreadRelative, minSpreadRelative between the cases as well as the baseCaseAverage and the instrumentCaseAverage
     """
-    scenarioDeltaAverages = open('src/resources/scenarioDeltaAverages', 'w')
-    scenarioDeltaMinSpread = open('src/resources/scenarioDeltaMinSpread', 'w')
-    scenarioDeltaMaxSpread = open('src/resources/scenarioDeltaMaxSpread', 'w')
-    scenarioDeltaAnalysis = open('src/resources/scenarioDeltaAnalysis', 'w')
-    scenarioAverages = open('src/resources/scenarioAverages', 'w')
+    scenarioDeltaAverages = open('resources/scenarioDeltaAverages', 'w')
+    scenarioDeltaMinSpread = open('resources/scenarioDeltaMinSpread', 'w')
+    scenarioDeltaMaxSpread = open('resources/scenarioDeltaMaxSpread', 'w')
+    scenarioDeltaAnalysis = open('resources/scenarioDeltaAnalysis', 'w')
+    scenarioAverages = open('resources/scenarioAverages', 'w')
     print(str(parameterPerformance))
     # list to store the results of the analysis
     analysisData = []

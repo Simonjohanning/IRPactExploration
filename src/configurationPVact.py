@@ -56,3 +56,4 @@ testScenarioData = [[{46: {'Dresden_optimistic': 411,
                                                            'Dresden_pessimistic': 9}}]]
 
 
+runConfigurationPath = 'modelInputFiles/'

@@ -56,7 +56,8 @@ def prepareJSON(filenamePrefix, inputFile, simulationIT, simulationAT, AP , IP, 
     :param currentSeed: the seed of the random generator used in the simulation run
     :return: the filename of the written file
     """
-    f = open(inputFile, "r")
+    templateFile = inputFile if inputFile else configurationPVact.baseInputFile
+    f = open(templateFile, "r")
     fileData = json.loads(f.read())
     fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['INTEREST_THRESHOLD'][
         'par_InDiracUnivariateDistribution_value'] = int(simulationIT)
@@ -71,10 +72,10 @@ def prepareJSON(filenamePrefix, inputFile, simulationIT, simulationAT, AP , IP, 
     fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_seed'] = currentSeed
     fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_innerParallelism'] = 1
     fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_outerParallelism'] = 1
-    with open(filenamePrefix + "-" + str(simulationAT) + "-" + str(
+    with open(configurationPVact.runConfigurationPath + filenamePrefix + "-" + str(simulationAT) + "-" + str(
             int(math.floor(simulationIT))) + '-' + str(currentSeed) + ".json", "w") as file:
         json.dump(fileData, file, indent=2)
-    return filenamePrefix + "-" + str(simulationAT) + "-" + str(int(math.floor(simulationIT))) + '-' + str(currentSeed)
+    return configurationPVact.runConfigurationPath + filenamePrefix + "-" + str(simulationAT) + "-" + str(int(math.floor(simulationIT))) + '-' + str(currentSeed)
 
 # Function to return the relevant analysis data (total number of cumulated adoptions) to the requesting function
 # TODO document
@@ -113,9 +114,9 @@ def prepareJSONRand(parameters):
             'par_InCommunicationModule3_actionnode3_awarePoints'] = 0
         fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_seed'] = random.randint(0, 99999)
         print('writing file with AP ' + str(AP) + ' and IP ' + str(IP) + ' and AT ' + str(parameters['adoptionThreshold']) + ' and IT ' + str(parameters['interestThreshold']))
-        with open(templateFile + "-" + str(parameters['adoptionThreshold']) + "-" + str(parameters['interestThreshold']) + ".json", "w") as file:
+        with open(configurationPVact.runConfigurationPath + templateFile + "-" + str(parameters['adoptionThreshold']) + "-" + str(parameters['interestThreshold']) + ".json", "w") as file:
             json.dump(fileData, file, indent=2)
-        return configurationPVact.baseInputFile + '-' + str(parameters['adoptionThreshold']) + '-' + str(parameters['interestThreshold'])
+        return configurationPVact.runConfigurationPath + templateFile + '-' + str(parameters['adoptionThreshold']) + '-' + str(parameters['interestThreshold'])
     else:
         print('error! Missing parameters adoptionThreshold, interestThreshold, AP and/or IP in preparing files for PVact')
 

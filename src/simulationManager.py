@@ -438,6 +438,7 @@ def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lower
                 modeParameters['IP'] = int(modelSpecificParameters['IP']) if 'IP' in modelSpecificParameters else configurationPVact.gds_defaults['IP']
                 jarPath = simulationRunner.prepareJson(currentScenario, 'PVact', modeParameters, configuration.scenarioPath + currentScenario + '.json')
             if(jarPath):
+                # Invoke the simulation run with the respective scenario data (as dataDirPath)
                 simulationRunner.invokeJarExternalData(jarPath, errorDef, False, 'resources/dataFiles/')
             else:
                 print('Error! No model was set so no configuration file was created for this run')
