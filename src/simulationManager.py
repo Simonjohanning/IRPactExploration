@@ -18,6 +18,7 @@ from metaheuristic_algorithms.simplified_particle_swarm_optimization import Simp
 from metaheuristic_algorithms.simulated_annealing import SimulatedAnnealing
 from metaheuristic_algorithms.genetic_algorithm import GeneticAlgorithm
 import random
+import multiprocessing as mp
 
 import simulationPlotter
 import simulationAnalyser
@@ -50,9 +51,9 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
         if ('noRepetitions' in parameters and 'scenarioList' in parameters and 'resolution' in parameters and 'lowerBoundAT' in parameters and 'upperBoundAT' in parameters and 'lowerBoundIT' in parameters and 'upperBoundIT' in parameters and 'AP' in parameters and 'IP' in parameters):
             scenarioFiles = parameters['scenarioList'].split(',')
             print('reading ' + str(len(scenarioFiles)) + ' scenarios files ')
-            createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), int(parameters['resolution']), parameters['errorDef'], float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']),  {'AP': float(parameters['AP']), 'IP': float(parameters['IP'])}, 'PVact')
+            parameterPerformance = createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), int(parameters['resolution']), parameters['errorDef'], float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']),  {'AP': float(parameters['AP']), 'IP': float(parameters['IP'])}, 'PVact')
             # TODO make less hacky and specific here
-            analysisData = simulationAnalyser.analyseScenarioPerformance(configuration.testScenarioData,
+            analysisData = simulationAnalyser.analyseScenarioPerformance(parameterPerformance,
                                                           float(parameters['lowerBoundAT']),
                                                           float(parameters['upperBoundAT']),
                                                           float(parameters['lowerBoundIT']),
@@ -450,3 +451,79 @@ def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lower
     # Return the analysis of the data to the invoking function
     return simulationAnalyser.analyseScenarioPerformance(parameterPerformance, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, scenarioFiles)
 
+def createParallelForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, modelSpecificParameters, model):
+    """
+    Function to generate and execute a number of simulation executions over an equally spaced parameter region in parallel
+
+    :param scenarioFiles: list of the scenarios to execute the simulation runs for
+    :param noRepetitions: the number of simulation runs for each parameter combination and scenario
+    :param granularity: the number of parameter values to span the grid over for each dimension
+    :param errorDef: the error metric to be used
+    :param lowerBoundX: the minimum value for the model parameter in the x-dimension
+    :param upperBoundX: the maximum value for the model parameter in the x-dimension
+    :param lowerBoundY: the minimum value for the model parameter in the y-dimension
+    :param upperBoundY: the maximum value for the model parameter in the x-dimension
+    :param modelSpecificParameters: simulation execution parameters specific to the model used
+    :param model: the model employed for the simuation
+    :return: A list containing analysis for every parameter combination between the scenarios comprising the x and y coordinates and the average, maxSpread, minSpread, maxSpreadRelative, minSpreadRelative between the cases as well as the baseCaseAverage and the instrumentCaseAverage
+    """
+    print('creating runs')
+    seedSet = set()
+    parameterPerformance = [[{} for col in range(granularity)] for row in range(granularity)]
+    pool = mp.Pool(mp.cpu_count())
+    # create the number of runs (repetitions of all parameter combinations) by initializing the seeds and calculating the relevant parameters
+    for l in range(int(noRepetitions * math.pow(granularity, 2))):
+        currentSeed = random.randint(0, int(math.pow(noRepetitions, 2) * math.pow(granularity, 3) * 2))
+        while (currentSeed in seedSet):
+            currentSeed = random.randint(0, int(math.pow(noRepetitions, 2) * math.pow(granularity, 3) * 2))
+        seedSet.add(currentSeed)
+        indexX = (math.floor(l / noRepetitions) % granularity)
+        indexY = (math.floor(l / (noRepetitions * granularity)))
+        correspondingX = lowerBoundX + (indexX * (upperBoundX - lowerBoundX) / (granularity - 1))
+        correspondingY = lowerBoundY + (indexY * (upperBoundY - lowerBoundY) / (granularity - 1))
+        def storeSimulationRun(indexX, indexY, seed, scenarioPerformance):
+            parameterPerformance[indexX][indexY][currentSeed] = scenarioPerformance
+        pool.apply_async(executeSeedRun, args=(scenarioFiles, errorDef, model, correspondingX, correspondingY, indexX, indexY, currentSeed, modelSpecificParameters), callback=storeSimulationRun)
+    # After all runs are started, close and join the pool (i.e. wait until all results are done)
+    pool.close()
+    pool.join()
+    print(parameterPerformance)
+    return simulationAnalyser.analyseScenarioPerformance(parameterPerformance, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, scenarioFiles)
+
+def executeSeedRun(scenarioFiles, errorDef, model, X, Y, indexX, indexY, seed, modelSpecificParameters):
+    """
+    Function to run the model with a fixed seed over a range of scenarios
+
+    :param scenarioFiles:
+    :param errorDef:
+    :param model:
+    :param X:
+    :param Y:
+    :param indexX:
+    :param indexY:
+    :param seed:
+    :param modelSpecificParameters:
+    :return:
+    """
+    scenarioPerformance = {}
+    # For each scenario calculate and store the results
+    for currentScenario in scenarioFiles:
+        jarPath = None
+        if (model == 'PVact'):
+            modeParameters = {'adoptionThreshold': X, 'interestThreshold': Y, 'currentSeed': seed}
+            modeParameters['AP'] = int(modelSpecificParameters['AP']) if 'AP' in modelSpecificParameters else \
+            configurationPVact.gds_defaults['AP']
+            modeParameters['IP'] = int(modelSpecificParameters['IP']) if 'IP' in modelSpecificParameters else \
+            configurationPVact.gds_defaults['IP']
+            jarPath = simulationRunner.prepareJson(currentScenario, 'PVact', modeParameters,
+                                                   configuration.scenarioPath + currentScenario + '.json')
+        if (jarPath):
+            # Invoke the simulation run with the respective scenario data (as dataDirPath)
+            simulationRunner.invokeJarExternalData(jarPath, errorDef, False, 'resources/dataFiles/')
+        else:
+            print('Error! No model was set so no configuration file was created for this run')
+        if (model == 'PVact'):
+            scenarioPerformance[currentScenario] = PVactModelHelper.readAnalysisData(
+                'resources/simulationFiles/images/AdoptionAnalysis.json')
+        print(str(scenarioPerformance))
+    return (indexX, indexY, seed, scenarioPerformance)
