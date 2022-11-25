@@ -44,7 +44,8 @@ def calculateGrid(searchParameters, minX, maxX, minY, maxY):
                 raise NotImplementedError('Model ' + model + ' not implemented.')
             # add the performance of the run to the list
             if(not inputFile == None):
-                list[col][row] = float(simulationRunner.invokeJar(inputFile, searchParameters['errorDefinition'], model, configuration.shellFlag))
+                # TODO think of a better logID
+                list[col][row] = float(simulationRunner.invokeJar(inputFile, searchParameters['errorDefinition'], model, 1))
             else:
                 raise NotImplementedError('inputFile not set by the model; most likely the model is invalid or implemented incompletely.')
             #if(searchParameters['printFlag']): print('Calculating for index ' + str(row*searchParameters['resolution']+col) + ' with row ' + str(row) + ' and column ' + str(col))

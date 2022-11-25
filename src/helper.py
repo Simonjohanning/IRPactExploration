@@ -143,20 +143,12 @@ def setParameters(opts):
             parameters['interestThreshold'] = a
         elif o == '--quickLaunch':
             parameters['quickLaunch'] = a
+        elif o == '--parallelExecution':
+            parameters['parallelExecution'] = a
         else:
             raise NotImplementedError('unrecognized parameter ' + str(o))
     return parameters
 
-# # TODO check if it can be removed
-# def navigateToTop():
-#     currentDir = os.getcwd().split('\\')[-1]
-#     #print(currentDir)
-#     if (currentDir == 'C:\\'):
-#         os.chdir('Users\mai11dlx\PycharmProjects\IRPactExploration')
-#     elif (not currentDir == 'IRPactExploration'):
-#         print('current dir is ' + os.getcwd() + '; navigating up')
-#         os.chdir('../')
-#         navigateToTop()
 
 # TODO test
 def printMissingParameters(parameterDictionary, parameterArray):

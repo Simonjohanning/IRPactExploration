@@ -51,13 +51,32 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
         if ('noRepetitions' in parameters and 'scenarioList' in parameters and 'resolution' in parameters and 'lowerBoundAT' in parameters and 'upperBoundAT' in parameters and 'lowerBoundIT' in parameters and 'upperBoundIT' in parameters and 'AP' in parameters and 'IP' in parameters):
             scenarioFiles = parameters['scenarioList'].split(',')
             print('reading ' + str(len(scenarioFiles)) + ' scenarios files ')
-            parameterPerformance = createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), int(parameters['resolution']), parameters['errorDef'], float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']),  {'AP': float(parameters['AP']), 'IP': float(parameters['IP'])}, 'PVact')
-            # TODO make less hacky and specific here
-            analysisData = simulationAnalyser.analyseScenarioPerformance(parameterPerformance,
-                                                          float(parameters['lowerBoundAT']),
-                                                          float(parameters['upperBoundAT']),
-                                                          float(parameters['lowerBoundIT']),
-                                                          float(parameters['upperBoundIT']), scenarioFiles)
+            # TODO Make the parallel execution more generic and move parallel/sequential decision into one forwardRun function at the appropriate point
+            print('parallelExecution' in parameters and parameters['parallelExecution'])
+            if('parallelExecution' in parameters and parameters['parallelExecution']):
+                parameterPerformance = createParallelForwardRuns(scenarioFiles, float(parameters['noRepetitions']),
+                                                         int(parameters['resolution']), parameters['errorDef'],
+                                                         float(parameters['lowerBoundAT']),
+                                                         float(parameters['upperBoundAT']),
+                                                         float(parameters['lowerBoundIT']),
+                                                         float(parameters['upperBoundIT']),
+                                                         {'AP': float(parameters['AP']), 'IP': float(parameters['IP'])},
+                                                         'PVact')
+                # TODO make less hacky and specific here
+                analysisData = simulationAnalyser.analyseScenarioPerformance(parameterPerformance,
+                                                                             float(parameters['lowerBoundAT']),
+                                                                             float(parameters['upperBoundAT']),
+                                                                             float(parameters['lowerBoundIT']),
+                                                                             float(parameters['upperBoundIT']),
+                                                                             scenarioFiles)
+            else:
+                parameterPerformance = createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), int(parameters['resolution']), parameters['errorDef'], float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']),  {'AP': float(parameters['AP']), 'IP': float(parameters['IP'])}, 'PVact')
+                # TODO make less hacky and specific here
+                analysisData = simulationAnalyser.analyseScenarioPerformance(parameterPerformance,
+                                                              float(parameters['lowerBoundAT']),
+                                                              float(parameters['upperBoundAT']),
+                                                              float(parameters['lowerBoundIT']),
+                                                              float(parameters['upperBoundIT']), scenarioFiles)
             simulationPlotter.plotRunStatistics(analysisData, 'relative', model)
         else:
             print(parameters)
@@ -394,7 +413,7 @@ def singleRunAndPlot(parameters, errorDefinition, plotfileSuffix):
         plotfileRootname = PVactModelHelper.generateRootname(parameters)
         outputDataFile = configurationPVact.outputDataFile
     if(configurationFile and plotfileRootname and outputDataFile):
-        returnData = simulationRunner.invokeJar(configurationFile, parameters['errorDef'], parameters['model'], False)
+        returnData = simulationRunner.invokeJar(configurationFile, parameters['errorDef'], parameters['model'], 1)
         simulationPlotter.plotYearlySimulationReferenceData(outputDataFile, '../plots/' + errorDefinition + '-' + plotfileRootname + '-' + str(returnData) + '-' + plotfileSuffix + '.png', parameters['model'])
     else:
         raise NotImplementedError('Mandatory model-specific data has not been set. This might be an omission')
@@ -440,7 +459,7 @@ def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lower
                 jarPath = simulationRunner.prepareJson(currentScenario, 'PVact', modeParameters, configuration.scenarioPath + currentScenario + '.json')
             if(jarPath):
                 # Invoke the simulation run with the respective scenario data (as dataDirPath)
-                simulationRunner.invokeJarExternalData(jarPath, errorDef, False, 'resources/dataFiles/')
+                simulationRunner.invokeJarExternalData(jarPath, errorDef, l, 'resources/dataFiles/')
             else:
                 print('Error! No model was set so no configuration file was created for this run')
             if(model == 'PVact'):
@@ -467,9 +486,10 @@ def createParallelForwardRuns(scenarioFiles, noRepetitions, granularity, errorDe
     :param model: the model employed for the simuation
     :return: A list containing analysis for every parameter combination between the scenarios comprising the x and y coordinates and the average, maxSpread, minSpread, maxSpreadRelative, minSpreadRelative between the cases as well as the baseCaseAverage and the instrumentCaseAverage
     """
-    print('creating runs')
+    print('creating parallel runs')
     seedSet = set()
     parameterPerformance = [[{} for col in range(granularity)] for row in range(granularity)]
+    print('creating a pool of ' + str(mp.cpu_count()) + ' cores')
     pool = mp.Pool(mp.cpu_count())
     # create the number of runs (repetitions of all parameter combinations) by initializing the seeds and calculating the relevant parameters
     for l in range(int(noRepetitions * math.pow(granularity, 2))):
@@ -481,8 +501,10 @@ def createParallelForwardRuns(scenarioFiles, noRepetitions, granularity, errorDe
         indexY = (math.floor(l / (noRepetitions * granularity)))
         correspondingX = lowerBoundX + (indexX * (upperBoundX - lowerBoundX) / (granularity - 1))
         correspondingY = lowerBoundY + (indexY * (upperBoundY - lowerBoundY) / (granularity - 1))
-        def storeSimulationRun(indexX, indexY, seed, scenarioPerformance):
-            parameterPerformance[indexX][indexY][currentSeed] = scenarioPerformance
+        def storeSimulationRun(parameters):
+            print(indexX)
+            parameterPerformance[parameters['indexX']][parameters['indexY']][parameters['currentSeed']] = parameters['scenarioPerformance']
+        print()
         pool.apply_async(executeSeedRun, args=(scenarioFiles, errorDef, model, correspondingX, correspondingY, indexX, indexY, currentSeed, modelSpecificParameters), callback=storeSimulationRun)
     # After all runs are started, close and join the pool (i.e. wait until all results are done)
     pool.close()
@@ -490,6 +512,7 @@ def createParallelForwardRuns(scenarioFiles, noRepetitions, granularity, errorDe
     print(parameterPerformance)
     return simulationAnalyser.analyseScenarioPerformance(parameterPerformance, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, scenarioFiles)
 
+# TODO document
 def executeSeedRun(scenarioFiles, errorDef, model, X, Y, indexX, indexY, seed, modelSpecificParameters):
     """
     Function to run the model with a fixed seed over a range of scenarios
@@ -519,11 +542,12 @@ def executeSeedRun(scenarioFiles, errorDef, model, X, Y, indexX, indexY, seed, m
                                                    configuration.scenarioPath + currentScenario + '.json')
         if (jarPath):
             # Invoke the simulation run with the respective scenario data (as dataDirPath)
-            simulationRunner.invokeJarExternalData(jarPath, errorDef, False, 'resources/dataFiles/')
+            simulationRunner.invokeJarExternalData(jarPath, errorDef, seed, 'resources/dataFiles/')
         else:
             print('Error! No model was set so no configuration file was created for this run')
         if (model == 'PVact'):
             scenarioPerformance[currentScenario] = PVactModelHelper.readAnalysisData(
                 'resources/simulationFiles/images/AdoptionAnalysis.json')
-        print(str(scenarioPerformance))
-    return (indexX, indexY, seed, scenarioPerformance)
+    print(str(scenarioPerformance))
+    print(str((indexX, indexY, seed, scenarioPerformance)))
+    return {'indexX': indexX, 'indexY': indexY, 'seed': seed, 'scenarioPerformance': scenarioPerformance}

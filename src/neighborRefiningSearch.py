@@ -12,6 +12,7 @@ import helper
 def evaluateNextPoint(X, Y, model, mode, inputFile):
     print('Evaluating point ' + str(X) + ', ' + str(Y))
     runConfigurationPrefix = simulationRunner.prepareJson('src/modelInputFiles/newPoint', model, helper.convertGridInMode(X, Y, model), inputFile)
+    # TODO arguments change, needs fixing
     data = simulationRunner.invokeJar(runConfigurationPrefix, mode)
     #data = simulationRunner.mockInvokeJar(X, IT)
     print(data)

@@ -40,7 +40,7 @@ def aggregateData(data, specialMode=None):
 
 
 # TODO Make consistent in exception handling with rest of the code base
-def invokeJar(inputFile, errorDef, model, shellFlag):
+def invokeJar(inputFile, errorDef, model, logID):
     """
     Function to invoke a jar-based model file based on the parameters provided.
     Selects the file and creates the invocation command based on the model specified.
@@ -49,17 +49,17 @@ def invokeJar(inputFile, errorDef, model, shellFlag):
     :param inputFile: the file specifying the configuration of the respective simulation run as required by the model
     :param errorDef: the definition of the errorMetric
     :param model: the model to execute the simulation for
-    :param shellFlag: the shellFlag for the execution of the jar
+    :param logID: An ID for the log file to be created for the run
     :return: the performance of the model run
     """
     try:
         if(errorDef == 'weightedCumulativeAnnualAdoptionDelta' and model == 'PVact'):
             data = check_output(PVactModelHelper.constructInvokationCommand('PVact_weightedCumulativeAnnualAdoptionDelta', {'inputFile': inputFile}),
-                shell=shellFlag).decode('utf-8').rstrip()
+                shell=False).decode('utf-8').rstrip()
             return aggregateData(data, 'weightedCumulativeAnnualAdoptionDelta')
         elif(model == 'PVact'):
             print('using file ' + inputFile)
-            data = check_output(PVactModelHelper.constructInvokationCommand('PVact_internal', {'inputFile': inputFile, 'errorDef': errorDef}), shell=shellFlag).decode('utf-8').rstrip()
+            data = check_output(PVactModelHelper.constructInvokationCommand('PVact_internal', {'inputFile': inputFile, 'errorDef': errorDef, 'logFile': 'log' + str(logID) + '.log'}), shell=False).decode('utf-8').rstrip()
             print(data)
             if (len(data.split('{')) > 1):
                 return aggregateData(data)
@@ -71,7 +71,7 @@ def invokeJar(inputFile, errorDef, model, shellFlag):
         sys.exit()
 
 # TODO Make consistent in exception handling with rest of the code base
-def invokeJarExternalData(inputFile, errorMode, shellFlag, dataDirPath):
+def invokeJarExternalData(inputFile, errorMode, logID, dataDirPath):
     """
     Function to invoke a jar-based model file with an external data directory based on the parameters provided.
     Selects the file and creates the invocation command based on the model specified.
@@ -88,13 +88,14 @@ def invokeJarExternalData(inputFile, errorMode, shellFlag, dataDirPath):
         if(errorMode == 'weightedCumulativeAnnualAdoptionDelta'):
             data = check_output( PVactModelHelper.constructInvokationCommand('PVact_weightedCumulativeAnnualAdoptionDelta_external', {'dataDirPath': dataDirPath})
                ,
-                shell=shellFlag).decode('utf-8').rstrip()
+                shell=False).decode('utf-8').rstrip()
             return aggregateData(data, 'weightedCumulativeAnnualAdoptionDelta')
         else:
             print('using file ' + inputFile)
             # modeParameter needs to contain the gnuFilePath in order for this to work
+            # TODO rename logID that is abused now
             data = check_output(
-               PVactModelHelper.constructInvokationCommand('PVact_external', {'inputFile': inputFile, 'dataDirPath': dataDirPath, 'gnuPlotPath': configuration.gnuPlotPath, 'errorDef': errorMode}), shell = shellFlag).decode('utf-8').rstrip()
+               PVactModelHelper.constructInvokationCommand('PVact_external', {'inputFile': inputFile, 'dataDirPath': dataDirPath, 'gnuPlotPath': configuration.gnuPlotPath, 'errorDef': errorMode, 'logFile': 'log' + str(logID) + '.log', 'outputFolder': 'output' + str(logID)}), shell = False).decode('utf-8').rstrip()
             print(data)
             if (len(data.split('{')) > 1):
                 return aggregateData(data)
