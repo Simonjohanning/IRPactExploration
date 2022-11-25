@@ -3,7 +3,7 @@
 """
 
 baseInputFile = 'resources/scenarios/scenario-dresden-partial'
-modelPath = 'resources/IRPact-1.0-SNAPSHOT-uber.jar'
+modelPath = 'resources/IRPact.jar'
 defaultOutputFile = 'resources/simulationFiles/example-output.json'
 defaultLogFile = 'resources/simulationFiles/log.log'
 
