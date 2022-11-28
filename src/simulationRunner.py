@@ -58,7 +58,7 @@ def invokeJar(inputFile, errorDef, model, logID):
                 shell=False).decode('utf-8').rstrip()
             return aggregateData(data, 'weightedCumulativeAnnualAdoptionDelta')
         elif(model == 'PVact'):
-            print('using file ' + inputFile)
+            #print('using file ' + inputFile)
             data = check_output(PVactModelHelper.constructInvokationCommand('PVact_internal', {'inputFile': inputFile, 'errorDef': errorDef, 'logFile': 'log' + str(logID) + '.log'}), shell=False).decode('utf-8').rstrip()
             print(data)
             if (len(data.split('{')) > 1):
@@ -122,7 +122,7 @@ def prepareJson(filenamePrefix, model, modeParameters, inputFile):
     if(model == 'PVact'):
         if(modeParameters['interestThreshold'] and modeParameters['adoptionThreshold'] and modeParameters['AP'] and modeParameters['IP'] and modeParameters['currentSeed']):
             returnFile = PVactModelHelper.prepareJSON(filenamePrefix, inputFile, modeParameters['interestThreshold'], modeParameters['adoptionThreshold'], modeParameters['AP'], modeParameters['IP'], modeParameters['currentSeed'])
-            print('Run configuration data written in file ' + returnFile + '.')
+            #print('Run configuration data written in file ' + returnFile + '.')
             return returnFile
         else:
             helper.printMissingParameters(modeParameters, ['interestThreshold', 'adoptionThreshold', 'AP', 'IP', 'currentSeed'])

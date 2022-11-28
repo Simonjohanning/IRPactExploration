@@ -490,7 +490,7 @@ def createParallelForwardRuns(scenarioFiles, noRepetitions, granularity, errorDe
     seedSet = set()
     parameterPerformance = [[{} for col in range(granularity)] for row in range(granularity)]
     print('creating a pool of ' + str(mp.cpu_count()) + ' cores')
-    pool = mp.Pool(mp.cpu_count())
+    pool = mp.Pool(4)
     # create the number of runs (repetitions of all parameter combinations) by initializing the seeds and calculating the relevant parameters
     for l in range(int(noRepetitions * math.pow(granularity, 2))):
         currentSeed = random.randint(0, int(math.pow(noRepetitions, 2) * math.pow(granularity, 3) * 2))
@@ -502,9 +502,8 @@ def createParallelForwardRuns(scenarioFiles, noRepetitions, granularity, errorDe
         correspondingX = lowerBoundX + (indexX * (upperBoundX - lowerBoundX) / (granularity - 1))
         correspondingY = lowerBoundY + (indexY * (upperBoundY - lowerBoundY) / (granularity - 1))
         def storeSimulationRun(parameters):
-            print(indexX)
             parameterPerformance[parameters['indexX']][parameters['indexY']][parameters['currentSeed']] = parameters['scenarioPerformance']
-        print()
+        print('executing run ' + str(l))
         pool.apply_async(executeSeedRun, args=(scenarioFiles, errorDef, model, correspondingX, correspondingY, indexX, indexY, currentSeed, modelSpecificParameters), callback=storeSimulationRun)
     # After all runs are started, close and join the pool (i.e. wait until all results are done)
     pool.close()
@@ -512,21 +511,22 @@ def createParallelForwardRuns(scenarioFiles, noRepetitions, granularity, errorDe
     print(parameterPerformance)
     return simulationAnalyser.analyseScenarioPerformance(parameterPerformance, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, scenarioFiles)
 
-# TODO document
 def executeSeedRun(scenarioFiles, errorDef, model, X, Y, indexX, indexY, seed, modelSpecificParameters):
     """
     Function to run the model with a fixed seed over a range of scenarios
 
-    :param scenarioFiles:
-    :param errorDef:
-    :param model:
-    :param X:
-    :param Y:
-    :param indexX:
-    :param indexY:
-    :param seed:
-    :param modelSpecificParameters:
-    :return:
+    :param scenarioFiles: list of the scenarios to execute the simulation runs for
+    :param errorDef: the error metric to be used
+    :param modelSpecificParameters: simulation execution parameters specific to the model used
+    :param model: the model employed for the simulation
+    :param X: the first variational parameter for the simulation run
+    :param Y: the second variational parameter for the simulation run
+    :param indexX: the index of the corresponding run in the first variational parameter (pass-through parameter)
+    :param indexY: the index of the corresponding run in the first variational parameter (pass-through parameter)
+    :param seed: the random seed of the respective run (pass-through parameter)
+    :param modelSpecificParameters: dictionary containing parameters specific to the model
+        (in the case of PVact containing AP and IP if they should deviate from the configuration default)
+    :return: a dictionary containing the passing parameters and the scenarioPerformance
     """
     scenarioPerformance = {}
     # For each scenario calculate and store the results
@@ -548,6 +548,6 @@ def executeSeedRun(scenarioFiles, errorDef, model, X, Y, indexX, indexY, seed, m
         if (model == 'PVact'):
             scenarioPerformance[currentScenario] = PVactModelHelper.readAnalysisData(
                 'resources/simulationFiles/images/AdoptionAnalysis.json')
-    print(str(scenarioPerformance))
-    print(str((indexX, indexY, seed, scenarioPerformance)))
+    # print(str(scenarioPerformance))
+    # print(str((indexX, indexY, seed, scenarioPerformance)))
     return {'indexX': indexX, 'indexY': indexY, 'seed': seed, 'scenarioPerformance': scenarioPerformance}

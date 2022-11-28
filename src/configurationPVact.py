@@ -3,7 +3,7 @@
 """
 
 baseInputFile = 'resources/scenarios/scenario-dresden-partial'
-modelPath = 'resources/IRPact.jar'
+modelPath = 'resources/PVact.jar'
 defaultOutputFile = 'resources/simulationFiles/example-output.json'
 defaultLogFile = 'resources/simulationFiles/log.log'
 
