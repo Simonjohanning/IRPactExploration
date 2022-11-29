@@ -21,25 +21,55 @@ def constructInvokationCommand(mode, param):
     :param param: a dictionary of the parameters used in the invokation command
     :return: performance data of the simulation execution
     """
+    #TODO make logic more elegant, especially wrt outputFolder
     if(mode == 'PVact_weightedCumulativeAnnualAdoptionDelta'):
-        return ['java', '-jar', configurationPVact.modelPath, '-i', param['inputFile'] + '.json', '-o',
-         configurationPVact.defaultOutputFile,
-         '--noConsole', '--logPath', 'resources/simulationFiles/' + param['logFile'], '--calculatePerformance', 'cumulativeAnnualAdoptionDelta', '--downloadDir', 'resources/simulationFiles/' + param['outputFolder']]
+        if ('outputFolder' in param):
+            return ['java', '-jar', configurationPVact.modelPath, '-i', param['inputFile'] + '.json', '-o',
+             configurationPVact.defaultOutputFile,
+             '--noConsole', '--logPath', 'resources/simulationFiles/' + param['logFile'], '--calculatePerformance', 'cumulativeAnnualAdoptionDelta', '--downloadDir', 'resources/simulationFiles/' + param['outputFolder']]
+        else:
+            return ['java', '-jar', configurationPVact.modelPath, '-i', param['inputFile'] + '.json', '-o',
+                    configurationPVact.defaultOutputFile,
+                    '--noConsole', '--logPath', 'resources/simulationFiles/' + param['logFile'],
+                    '--calculatePerformance', 'cumulativeAnnualAdoptionDelta', '--downloadDir',
+                    'resources/simulationFiles/' + param['outputFolder']]
     elif(mode == 'PVact_internal'):
-        return ['java', '-jar', configurationPVact.modelPath, '-i',  param['inputFile'] + '.json', '-o',
-         configurationPVact.defaultOutputFile,
-         '--noConsole', '--logPath', 'resources/simulationFiles/' + param['logFile'], '--calculatePerformance',  param['errorDef'], '--gnuplotCommand',
-         'C:/Users/mai11dlx/gnuplot/bin/gnuplot.exe', '--downloadDir', 'resources/simulationFiles/' + param['outputFolder']]
+        if('outputFolder' in param):
+            return ['java', '-jar', configurationPVact.modelPath, '-i',  param['inputFile'] + '.json', '-o',
+             configurationPVact.defaultOutputFile,
+             '--noConsole', '--logPath', 'resources/simulationFiles/' + param['logFile'], '--calculatePerformance',  param['errorDef'], '--gnuplotCommand',
+             'C:/Users/mai11dlx/gnuplot/bin/gnuplot.exe', '--downloadDir', 'resources/simulationFiles/' + param['outputFolder']]
+        else:
+            return ['java', '-jar', configurationPVact.modelPath, '-i', param['inputFile'] + '.json', '-o',
+                    configurationPVact.defaultOutputFile,
+                    '--noConsole', '--logPath', 'resources/simulationFiles/' + param['logFile'],
+                    '--calculatePerformance', param['errorDef'], '--gnuplotCommand',
+                    'C:/Users/mai11dlx/gnuplot/bin/gnuplot.exe']
     elif(mode == 'PVact_weightedCumulativeAnnualAdoptionDelta_external'):
-        return ['java', '-jar', configurationPVact.modelPath, '-i', param['inputFile'] + '.json', '-o',
-         configurationPVact.defaultOutputFile,
-         '--noConsole', '--logPath', 'resources/simulationFiles/' + param['logFile'], '--calculatePerformance', 'cumulativeAnnualAdoptionDelta', '--dataDir',
-         param['dataDirPath'], '--downloadDir', 'resources/simulationFiles/' + param['outputFolder']]
+        if('outputFolder' in param):
+            return ['java', '-jar', configurationPVact.modelPath, '-i', param['inputFile'] + '.json', '-o',
+             configurationPVact.defaultOutputFile,
+             '--noConsole', '--logPath', 'resources/simulationFiles/' + param['logFile'], '--calculatePerformance', 'cumulativeAnnualAdoptionDelta', '--dataDir',
+             param['dataDirPath'], '--downloadDir', 'resources/simulationFiles/' + param['outputFolder']]
+        else:
+            return ['java', '-jar', configurationPVact.modelPath, '-i', param['inputFile'] + '.json', '-o',
+                    configurationPVact.defaultOutputFile,
+                    '--noConsole', '--logPath', 'resources/simulationFiles/' + param['logFile'],
+                    '--calculatePerformance', 'cumulativeAnnualAdoptionDelta', '--dataDir',
+                    param['dataDirPath'], '--downloadDir', 'resources/simulationFiles/' + param['outputFolder']]
     elif(mode == 'PVact_external'):
-        return ['java', '-jar', configurationPVact.modelPath, '-i', param['inputFile'] + '.json', '-o',
-         configurationPVact.defaultOutputFile,
-         '--noConsole', '--logPath', 'resources/simulationFiles/' + param['logFile'], '--calculatePerformance', param['errorDef'], '--gnuplotCommand',
-         param['gnuPlotPath'], '--dataDir', param['dataDirPath'], '--downloadDir', 'resources/simulationFiles/' + param['outputFolder']]
+        if('outputFolder' in param):
+            return ['java', '-jar', configurationPVact.modelPath, '-i', param['inputFile'] + '.json', '-o',
+             configurationPVact.defaultOutputFile,
+             '--noConsole', '--logPath', 'resources/simulationFiles/' + param['logFile'], '--calculatePerformance', param['errorDef'], '--gnuplotCommand',
+             param['gnuPlotPath'], '--dataDir', param['dataDirPath'], '--downloadDir', 'resources/simulationFiles/' + param['outputFolder']]
+        else:
+            return ['java', '-jar', configurationPVact.modelPath, '-i', param['inputFile'] + '.json', '-o',
+                    configurationPVact.defaultOutputFile,
+                    '--noConsole', '--logPath', 'resources/simulationFiles/' + param['logFile'],
+                    '--calculatePerformance', param['errorDef'], '--gnuplotCommand',
+                    param['gnuPlotPath'], '--dataDir', param['dataDirPath'], '--downloadDir',
+                    'resources/simulationFiles/' + param['outputFolder']]
 
 # TODO check that file was written successfully
 def prepareJSON(filenamePrefix, inputFile, simulationIT, simulationAT, AP , IP, currentSeed):
@@ -57,7 +87,7 @@ def prepareJSON(filenamePrefix, inputFile, simulationIT, simulationAT, AP , IP, 
     :return: the filename of the written file
     """
     templateFile = inputFile if inputFile else configurationPVact.baseInputFile
-    f = open(templateFile, "r")
+    f = open('resources/scenarios/' + templateFile, "r")
     fileData = json.loads(f.read())
     fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['INTEREST_THRESHOLD'][
         'par_InDiracUnivariateDistribution_value'] = int(simulationIT)
@@ -100,12 +130,13 @@ def prepareJSONRand(parameters):
     IP = int(parameters['IP']) if 'IP' in parameters else configurationPVact.gds_defaults['IP']
     if ('adoptionThreshold' in parameters and 'interestThreshold'):
         templateFile = parameters['inputFile'] if 'inputFile' in parameters else configurationPVact.baseInputFile
-        f = open(templateFile + '.json', "r")
+        f = open('resources/scenarios/' + templateFile + '.json', "r")
         fileData = json.loads(f.read())
         fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['INTEREST_THRESHOLD'][
             'par_InDiracUnivariateDistribution_value'] = int(parameters['interestThreshold'])
         fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['ADOPTION_THRESHOLD'][
             'par_InDiracUnivariateDistribution_value'] = float(parameters['adoptionThreshold'])
+        # TODO check how to deal with communication-excluding models
         fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
             'par_InCommunicationModule3_actionnode3_adopterPoints'] = AP
         fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][

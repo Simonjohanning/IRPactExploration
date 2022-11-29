@@ -2,7 +2,7 @@
     File to store model-specific defaults and data for the PVact model.
 """
 
-baseInputFile = 'resources/scenarios/scenario-dresden-partial'
+baseInputFile = 'scenario-dresden-partial'
 modelPath = 'resources/PVact.jar'
 defaultOutputFile = 'resources/simulationFiles/example-output.json'
 defaultLogFile = 'resources/simulationFiles/log.log'
