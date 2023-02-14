@@ -1,0 +1,7 @@
+services:
+  app:
+    image: pvactval-docker
+    command: sh -c "echo 'compose test'"
+    working_dir: /app
+    volumes:
+        - ./:/app
