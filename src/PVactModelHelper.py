@@ -137,14 +137,14 @@ def prepareJSONRand(parameters):
         fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['ADOPTION_THRESHOLD'][
             'par_InDiracUnivariateDistribution_value'] = float(parameters['adoptionThreshold'])
         # TODO check how to deal with communication-excluding models
-        fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-            'par_InCommunicationModule3_actionnode3_adopterPoints'] = AP
-        fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-            'par_InCommunicationModule3_actionnode3_interestedPoints'] = IP
-        fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-            'par_InCommunicationModule3_actionnode3_awarePoints'] = 0
-        fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_seed'] = random.randint(0, 99999)
-        print('writing file with AP ' + str(AP) + ' and IP ' + str(IP) + ' and AT ' + str(parameters['adoptionThreshold']) + ' and IT ' + str(parameters['interestThreshold']))
+        # fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
+        #     'par_InCommunicationModule3_actionnode3_adopterPoints'] = AP
+        # fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
+        #     'par_InCommunicationModule3_actionnode3_interestedPoints'] = IP
+        # fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
+        #     'par_InCommunicationModule3_actionnode3_awarePoints'] = 0
+        # fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_seed'] = random.randint(0, 99999)
+        # print('writing file with AP ' + str(AP) + ' and IP ' + str(IP) + ' and AT ' + str(parameters['adoptionThreshold']) + ' and IT ' + str(parameters['interestThreshold']))
         with open(configurationPVact.runConfigurationPath + templateFile + "-" + str(parameters['adoptionThreshold']) + "-" + str(parameters['interestThreshold']) + ".json", "w") as file:
             json.dump(fileData, file, indent=2)
         return configurationPVact.runConfigurationPath + templateFile + '-' + str(parameters['adoptionThreshold']) + '-' + str(parameters['interestThreshold'])
