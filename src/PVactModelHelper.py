@@ -72,7 +72,7 @@ def constructInvokationCommand(mode, param):
                     'resources/simulationFiles/' + param['outputFolder']]
 
 # TODO check that file was written successfully
-def prepareJSON(filenamePrefix, inputFile, simulationIT, simulationAT, AP , IP, currentSeed):
+def prepareJSON(filenamePrefix, inputFile, simulationIT, simulationAT, AP , IP, currentSeed, communicationFlag):
     """
     Function to prepare the shipped JSON file to adjust it to individual runs.
     Changes model parameters in the file on the basis of function arguments and returns the name stub to the input file.
@@ -87,21 +87,22 @@ def prepareJSON(filenamePrefix, inputFile, simulationIT, simulationAT, AP , IP, 
     :return: the filename of the written file
     """
     templateFile = inputFile if inputFile else configurationPVact.baseInputFile
-    f = open('resources/scenarios/' + templateFile, "r")
+    f = open(templateFile, "r")
     fileData = json.loads(f.read())
     fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['INTEREST_THRESHOLD'][
         'par_InDiracUnivariateDistribution_value'] = int(simulationIT)
     fileData['data'][0]['years'][0]['sets']['set_InDiracUnivariateDistribution']['ADOPTION_THRESHOLD'][
         'par_InDiracUnivariateDistribution_value'] = float(simulationAT)
-    fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-        'par_InCommunicationModule3_actionnode3_adopterPoints'] = int(AP)
-    fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-        'par_InCommunicationModule3_actionnode3_interestedPoints'] = int(IP)
-    fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
-        'par_InCommunicationModule3_actionnode3_awarePoints'] = 0
     fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_seed'] = currentSeed
     fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_innerParallelism'] = 1
     fileData['data'][0]['years'][0]['scalars']['sca_InGeneral_outerParallelism'] = 1
+    if(communicationFlag):
+        fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
+            'par_InCommunicationModule3_actionnode3_adopterPoints'] = int(AP)
+        fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
+            'par_InCommunicationModule3_actionnode3_interestedPoints'] = int(IP)
+        fileData['data'][0]['years'][0]['sets']['set_InCommunicationModule3_actionnode3']['COMMU_ACTION'][
+            'par_InCommunicationModule3_actionnode3_awarePoints'] = 0
     with open(configurationPVact.runConfigurationPath + filenamePrefix + "-" + str(simulationAT) + "-" + str(
             int(math.floor(simulationIT))) + '-' + str(currentSeed) + ".json", "w") as file:
         json.dump(fileData, file, indent=2)

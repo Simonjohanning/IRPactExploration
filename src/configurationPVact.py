@@ -10,6 +10,7 @@ defaultLogFile = 'resources/simulationFiles/log.log'
 gds_defaults = {
     'AP': 5,
     'IP': 1,
+    'communication': True,
 }
 defaultInterestThreshold = 22
 

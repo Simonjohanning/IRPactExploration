@@ -70,7 +70,7 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
                                                                              float(parameters['upperBoundIT']),
                                                                              scenarioFiles)
             else:
-                parameterPerformance = createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), int(parameters['resolution']), parameters['errorDef'], float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']),  {'AP': float(parameters['AP']), 'IP': float(parameters['IP'])}, 'PVact')
+                parameterPerformance = createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), int(parameters['resolution']), parameters['errorDef'], float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']),  {'AP': float(parameters['AP']), 'IP': float(parameters['IP']), 'communication':  (not parameters['communication'] == 'False')}, 'PVact')
                 # TODO make less hacky and specific here
                 analysisData = simulationAnalyser.analyseScenarioPerformance(parameterPerformance,
                                                               float(parameters['lowerBoundAT']),
@@ -89,6 +89,7 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
             print('upperBoundIT' in parameters)
             print('AP' in parameters)
             print('IP' in parameters)
+            print('communication' in parameters)
     elif (executionMethod == 'multipleRuns'):
         for index in range(int(parameters['noRuns'])):
             singleRunAndPlot(parameters, errorDefinition, 'run' + str(index))
@@ -104,7 +105,7 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
                     singleRunAndPlot({**parameters, **eval(line)}, errorDefinition, '')
     elif (executionMethod == 'PVact_forwardRuns'):
         scenarioFiles = parameters['scenarioList'].split(',')
-        createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), float(parameters['resolution']), errorDefinition, float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']), {'AP': float(parameters['AP']), 'IP': float(parameters['IP'])}, 'PVact')
+        createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), float(parameters['resolution']), errorDefinition, float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']), {'AP': float(parameters['AP']), 'IP': float(parameters['IP']), 'communication': (not parameters['communication'] == 'False')}, 'PVact')
     elif (executionMethod == 'runAndPlot'):
         print('in runAndPlot')
         singleRunAndPlot({**parameters, 'model': model}, errorDefinition, '')
@@ -432,20 +433,20 @@ def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lower
     :param lowerBoundY: the minimum value for the model parameter in the y-dimension
     :param upperBoundY: the maximum value for the model parameter in the x-dimension
     :param modelSpecificParameters: simulation execution parameters specific to the model used
-    :param model: the model employed for the simuation
+    :param model: the model employed for the simulation
     :return: A list containing analysis for every parameter combination between the scenarios comprising the x and y coordinates and the average, maxSpread, minSpread, maxSpreadRelative, minSpreadRelative between the cases as well as the baseCaseAverage and the instrumentCaseAverage
     """
     print('creating runs')
     seedSet = set()
-    parameterPerformance = [[{} for col in range(granularity)] for row in range(granularity)]
+    parameterPerformance = [[{} for col in range(int(granularity))] for row in range(int(granularity))]
     # create the number of runs (repetitions of all parameter combinations) by initializing the seeds and calculating the relevant parameters
     for l in range(int(noRepetitions * math.pow(granularity, 2))):
         currentSeed = random.randint(0, int(math.pow(noRepetitions, 2) * math.pow(granularity, 3) * 2))
         while(currentSeed in seedSet):
             currentSeed = random.randint(0, int(math.pow(noRepetitions, 2) * math.pow(granularity, 3) * 2))
         seedSet.add(currentSeed)
-        indexX = (math.floor(l/noRepetitions) % granularity)
-        indexY = (math.floor(l/(noRepetitions * granularity)))
+        indexX = int(math.floor(l/noRepetitions) % granularity)
+        indexY = int(math.floor(l/(noRepetitions * granularity)))
         currentX = lowerBoundX + (indexX * (upperBoundX - lowerBoundX) / (granularity - 1))
         currentY = lowerBoundY + (indexY * (upperBoundY - lowerBoundY) / (granularity - 1))
         scenarioPerformance = {}
@@ -456,7 +457,9 @@ def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lower
                 modeParameters = {'adoptionThreshold': currentX, 'interestThreshold': currentY, 'currentSeed': currentSeed}
                 modeParameters['AP'] = int(modelSpecificParameters['AP']) if 'AP' in modelSpecificParameters else configurationPVact.gds_defaults['AP']
                 modeParameters['IP'] = int(modelSpecificParameters['IP']) if 'IP' in modelSpecificParameters else configurationPVact.gds_defaults['IP']
+                modeParameters['communicationFlag'] = bool(modelSpecificParameters['communication']) if 'communication' in modelSpecificParameters else configurationPVact.gds_defaults['communication']
                 jarPath = simulationRunner.prepareJson(currentScenario, 'PVact', modeParameters, configuration.scenarioPath + currentScenario + '.json')
+                print('jarpATH ' + jarPath)
             if(jarPath):
                 # Invoke the simulation run with the respective scenario data (as dataDirPath)
                 simulationRunner.invokeJarExternalData(jarPath, errorDef, l, 'resources/dataFiles/')
@@ -538,6 +541,9 @@ def executeSeedRun(scenarioFiles, errorDef, model, X, Y, indexX, indexY, seed, m
             configurationPVact.gds_defaults['AP']
             modeParameters['IP'] = int(modelSpecificParameters['IP']) if 'IP' in modelSpecificParameters else \
             configurationPVact.gds_defaults['IP']
+            modeParameters['communicationFlag'] = bool(
+                modelSpecificParameters['communication']) if 'communication' in modelSpecificParameters else \
+            configurationPVact.gds_defaults['communication']
             jarPath = simulationRunner.prepareJson(currentScenario, 'PVact', modeParameters,
                                                    configuration.scenarioPath + currentScenario + '.json')
         if (jarPath):

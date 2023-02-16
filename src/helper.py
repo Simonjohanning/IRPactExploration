@@ -145,6 +145,8 @@ def setParameters(opts):
             parameters['quickLaunch'] = a
         elif o == '--parallelExecution':
             parameters['parallelExecution'] = a
+        elif o == '--communication':
+            parameters['communication'] = a
         else:
             raise NotImplementedError('unrecognized parameter ' + str(o))
     return parameters

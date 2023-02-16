@@ -108,6 +108,7 @@ def invokeJarExternalData(inputFile, errorMode, logID, dataDirPath):
 
 
 # TODO Adjust description and document
+# TODO fix calls from neighbourhood search and Wrapper since parameters changed (check simulationManager for reference)
 def prepareJson(filenamePrefix, model, modeParameters, inputFile):
     """
     Function to manipulate a json-based scenario definition file to fit the parameters for the desired run.
@@ -120,9 +121,10 @@ def prepareJson(filenamePrefix, model, modeParameters, inputFile):
     :return: the filename of the written json file
     """
     if(model == 'PVact'):
-        if(modeParameters['interestThreshold'] and modeParameters['adoptionThreshold'] and modeParameters['AP'] and modeParameters['IP'] and modeParameters['currentSeed']):
-            returnFile = PVactModelHelper.prepareJSON(filenamePrefix, inputFile, modeParameters['interestThreshold'], modeParameters['adoptionThreshold'], modeParameters['AP'], modeParameters['IP'], modeParameters['currentSeed'])
-            #print('Run configuration data written in file ' + returnFile + '.')
+        if(('interestThreshold' in modeParameters) and ('adoptionThreshold' in modeParameters) and ('AP' in modeParameters) and ('IP' in modeParameters) and ('currentSeed' in modeParameters) and ('communicationFlag' in modeParameters)):
+            print('communicationFlag is ' + str(modeParameters['communicationFlag']))
+            returnFile = PVactModelHelper.prepareJSON(filenamePrefix, inputFile, modeParameters['interestThreshold'], modeParameters['adoptionThreshold'], modeParameters['AP'], modeParameters['IP'], modeParameters['currentSeed'], modeParameters['communicationFlag'])
+            print('Run configuration data written in file ' + returnFile + '.')
             return returnFile
         else:
             helper.printMissingParameters(modeParameters, ['interestThreshold', 'adoptionThreshold', 'AP', 'IP', 'currentSeed'])
