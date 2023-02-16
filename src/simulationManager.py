@@ -500,7 +500,7 @@ def createParallelForwardRuns(scenarioFiles, noRepetitions, granularity, errorDe
     """
     print('creating parallel runs')
     seedSet = set()
-    parameterPerformance = [[{} for col in int(range(granularity))] for row in int(range(granularity))]
+    parameterPerformance = [[{} for col in range(int(granularity))] for row in range(int(granularity))]
     print('creating a pool of ' + str(mp.cpu_count()) + ' cores')
     pool = mp.Pool(mp.cpu_count())
     # create the number of runs (repetitions of all parameter combinations) by initializing the seeds and calculating the relevant parameters
