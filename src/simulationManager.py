@@ -106,6 +106,13 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
     elif (executionMethod == 'PVact_forwardRuns'):
         scenarioFiles = parameters['scenarioList'].split(',')
         createForwardRuns(scenarioFiles, float(parameters['noRepetitions']), float(parameters['resolution']), errorDefinition, float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']), float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']), {'AP': float(parameters['AP']), 'IP': float(parameters['IP']), 'communication': (not parameters['communication'] == 'False')}, 'PVact')
+    elif (executionMethod == 'PVact_forwardRuns_Parallel'):
+        scenarioFiles = parameters['scenarioList'].split(',')
+        createParallelForwardRuns(scenarioFiles, float(parameters['noRepetitions']), float(parameters['resolution']),
+                          errorDefinition, float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']),
+                          float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']),
+                          {'AP': float(parameters['AP']), 'IP': float(parameters['IP']),
+                           'communication': (not parameters['communication'] == 'False')}, 'PVact')
     elif (executionMethod == 'runAndPlot'):
         print('in runAndPlot')
         singleRunAndPlot({**parameters, 'model': model}, errorDefinition, '')
@@ -486,22 +493,22 @@ def createParallelForwardRuns(scenarioFiles, noRepetitions, granularity, errorDe
     :param lowerBoundY: the minimum value for the model parameter in the y-dimension
     :param upperBoundY: the maximum value for the model parameter in the x-dimension
     :param modelSpecificParameters: simulation execution parameters specific to the model used
-    :param model: the model employed for the simuation
+    :param model: the model employed for the simulation
     :return: A list containing analysis for every parameter combination between the scenarios comprising the x and y coordinates and the average, maxSpread, minSpread, maxSpreadRelative, minSpreadRelative between the cases as well as the baseCaseAverage and the instrumentCaseAverage
     """
     print('creating parallel runs')
     seedSet = set()
     parameterPerformance = [[{} for col in range(granularity)] for row in range(granularity)]
     print('creating a pool of ' + str(mp.cpu_count()) + ' cores')
-    pool = mp.Pool(4)
+    pool = mp.Pool(mp.cpu_count())
     # create the number of runs (repetitions of all parameter combinations) by initializing the seeds and calculating the relevant parameters
     for l in range(int(noRepetitions * math.pow(granularity, 2))):
         currentSeed = random.randint(0, int(math.pow(noRepetitions, 2) * math.pow(granularity, 3) * 2))
         while (currentSeed in seedSet):
             currentSeed = random.randint(0, int(math.pow(noRepetitions, 2) * math.pow(granularity, 3) * 2))
         seedSet.add(currentSeed)
-        indexX = (math.floor(l / noRepetitions) % granularity)
-        indexY = (math.floor(l / (noRepetitions * granularity)))
+        indexX = int(math.floor(l / noRepetitions) % granularity)
+        indexY = int(math.floor(l / (noRepetitions * granularity)))
         correspondingX = lowerBoundX + (indexX * (upperBoundX - lowerBoundX) / (granularity - 1))
         correspondingY = lowerBoundY + (indexY * (upperBoundY - lowerBoundY) / (granularity - 1))
         def storeSimulationRun(parameters):
