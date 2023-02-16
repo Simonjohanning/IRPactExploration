@@ -13,7 +13,7 @@ if __name__ == '__main__':
     print(os.getcwd())
     argv = sys.argv[1:]
     # TODO include new parameters for MHs
-    opts, args = getopt.getopt(argv, 'd:e:msr', ['acceptableDelta=', 'delta=', 'errorDef=', 'maxDepth=', 'scaleFactor=', 'resolution=', 'AT=', 'IT=', 'method=', 'AP=', 'IP=', 'runFile=', 'noRuns=', 'noRepetitions=', 'scenarioList=', 'lowerBoundAT=', 'upperBoundAT=', 'lowerBoundIT=', 'upperBoundIT=', 'inputFile=', 'model=', 'adoptionThreshold=', 'interestThreshold=', 'quickLaunch=', 'parallelExecution=', 'communication='] )
+    opts, args = getopt.getopt(argv, 'd:e:msr', ['acceptableDelta=', 'delta=', 'errorDef=', 'maxDepth=', 'scaleFactor=', 'resolution=', 'AT=', 'IT=', 'method=', 'AP=', 'IP=', 'runFile=', 'noRuns=', 'noRepetitions=', 'scenarioList=', 'lowerBoundAT=', 'upperBoundAT=', 'lowerBoundIT=', 'upperBoundIT=', 'inputFile=', 'model=', 'adoptionThreshold=', 'interestThreshold=', 'quickLaunch=', 'parallelExecution=', 'communication=', 'noCPUs='] )
     parameters = helper.setParameters(opts)
     if(('quickLaunch' in parameters) and (parameters['quickLaunch'] == True)):
         quickLauncher.quickLaunch(parameters)

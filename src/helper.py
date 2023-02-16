@@ -147,6 +147,8 @@ def setParameters(opts):
             parameters['parallelExecution'] = a
         elif o == '--communication':
             parameters['communication'] = a
+        elif o == '--noCPUs':
+            parameters['noCPUs'] = a
         else:
             raise NotImplementedError('unrecognized parameter ' + str(o))
     return parameters

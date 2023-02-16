@@ -61,7 +61,7 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
                                                          float(parameters['lowerBoundIT']),
                                                          float(parameters['upperBoundIT']),
                                                          {'AP': float(parameters['AP']), 'IP': float(parameters['IP'])},
-                                                         'PVact')
+                                                         'PVact', int(parameters['noCPUs']))
                 # TODO make less hacky and specific here
                 analysisData = simulationAnalyser.analyseScenarioPerformance(parameterPerformance,
                                                                              float(parameters['lowerBoundAT']),
@@ -112,7 +112,7 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
                           errorDefinition, float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']),
                           float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']),
                           {'AP': float(parameters['AP']), 'IP': float(parameters['IP']),
-                           'communication': (not parameters['communication'] == 'False')}, 'PVact')
+                           'communication': (not parameters['communication'] == 'False')}, 'PVact',  int(parameters('noCPUs')))
     elif (executionMethod == 'runAndPlot'):
         print('in runAndPlot')
         singleRunAndPlot({**parameters, 'model': model}, errorDefinition, '')
@@ -482,7 +482,7 @@ def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lower
     # TODO pipe through scenario performance analysis
     # return simulationAnalyser.analyseScenarioPerformance(parameterPerformance, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, scenarioFiles)
 
-def createParallelForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, modelSpecificParameters, model):
+def createParallelForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, modelSpecificParameters, model, noCPUs):
     """
     Function to generate and execute a number of simulation executions over an equally spaced parameter region in parallel
 
@@ -501,8 +501,8 @@ def createParallelForwardRuns(scenarioFiles, noRepetitions, granularity, errorDe
     print('creating parallel runs')
     seedSet = set()
     parameterPerformance = [[{} for col in range(int(granularity))] for row in range(int(granularity))]
-    print('creating a pool of ' + str(mp.cpu_count()) + ' cores')
-    pool = mp.Pool(mp.cpu_count())
+    print('creating a pool of ' + str(noCPUs) + ' cores')
+    pool = mp.Pool(noCPUs)
     # create the number of runs (repetitions of all parameter combinations) by initializing the seeds and calculating the relevant parameters
     for l in range(int(noRepetitions * math.pow(granularity, 2))):
         currentSeed = random.randint(0, int(math.pow(noRepetitions, 2) * math.pow(granularity, 3) * 2))
