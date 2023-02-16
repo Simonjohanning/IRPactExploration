@@ -478,7 +478,9 @@ def createForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lower
         parameterPerformance[indexX][indexY][currentSeed] = scenarioPerformance
         print(str(parameterPerformance[indexX][indexY]))
     # Return the analysis of the data to the invoking function
-    return simulationAnalyser.analyseScenarioPerformance(parameterPerformance, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, scenarioFiles)
+    return parameterPerformance
+    # TODO pipe through scenario performance analysis
+    # return simulationAnalyser.analyseScenarioPerformance(parameterPerformance, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, scenarioFiles)
 
 def createParallelForwardRuns(scenarioFiles, noRepetitions, granularity, errorDef, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, modelSpecificParameters, model):
     """
@@ -519,7 +521,9 @@ def createParallelForwardRuns(scenarioFiles, noRepetitions, granularity, errorDe
     pool.close()
     pool.join()
     print(parameterPerformance)
-    return simulationAnalyser.analyseScenarioPerformance(parameterPerformance, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, scenarioFiles)
+    return parameterPerformance
+    # TODO pipe through scenario performance analysis
+    # return simulationAnalyser.analyseScenarioPerformance(parameterPerformance, lowerBoundX, upperBoundX, lowerBoundY, upperBoundY, scenarioFiles)
 
 def executeSeedRun(scenarioFiles, errorDef, model, X, Y, indexX, indexY, seed, modelSpecificParameters):
     """
