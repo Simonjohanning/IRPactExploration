@@ -112,7 +112,7 @@ def runSimulations(model, errorDefinition, executionMethod, parameters, plotFlag
                           errorDefinition, float(parameters['lowerBoundAT']), float(parameters['upperBoundAT']),
                           float(parameters['lowerBoundIT']), float(parameters['upperBoundIT']),
                           {'AP': float(parameters['AP']), 'IP': float(parameters['IP']),
-                           'communication': (not parameters['communication'] == 'False')}, 'PVact',  int(parameters('noCPUs')))
+                           'communication': (not parameters['communication'] == 'False')}, 'PVact',  int(parameters['noCPUs']))
     elif (executionMethod == 'runAndPlot'):
         print('in runAndPlot')
         singleRunAndPlot({**parameters, 'model': model}, errorDefinition, '')
