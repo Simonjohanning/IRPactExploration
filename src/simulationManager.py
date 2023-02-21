@@ -514,7 +514,9 @@ def createParallelForwardRuns(scenarioFiles, noRepetitions, granularity, errorDe
         correspondingX = lowerBoundX + (indexX * (upperBoundX - lowerBoundX) / (granularity - 1))
         correspondingY = lowerBoundY + (indexY * (upperBoundY - lowerBoundY) / (granularity - 1))
         def storeSimulationRun(parameters):
+            print('about to store with parameters ' + str(parameters) + ' with performance ' + str(parameters['scenarioPerformance']))
             parameterPerformance[parameters['indexX']][parameters['indexY']][parameters['currentSeed']] = parameters['scenarioPerformance']
+            print(str(parameterPerformance))
         print('executing run ' + str(l))
         pool.apply_async(executeSeedRun, args=(scenarioFiles, errorDef, model, correspondingX, correspondingY, indexX, indexY, currentSeed, modelSpecificParameters), callback=storeSimulationRun)
     # After all runs are started, close and join the pool (i.e. wait until all results are done)
@@ -544,6 +546,7 @@ def executeSeedRun(scenarioFiles, errorDef, model, X, Y, indexX, indexY, seed, m
     """
     scenarioPerformance = {}
     # For each scenario calculate and store the results
+    print('executing runs for scenarios' + str(scenarioFiles))
     for currentScenario in scenarioFiles:
         jarPath = None
         if (model == 'PVact'):
@@ -566,5 +569,7 @@ def executeSeedRun(scenarioFiles, errorDef, model, X, Y, indexX, indexY, seed, m
             scenarioPerformance[currentScenario] = PVactModelHelper.readAnalysisData(
                 'resources/simulationFiles/images/AdoptionAnalysis.json')
     # print(str(scenarioPerformance))
-    # print(str((indexX, indexY, seed, scenarioPerformance)))
-    return {'indexX': indexX, 'indexY': indexY, 'seed': seed, 'scenarioPerformance': scenarioPerformance}
+    print('performance: ' + str((indexX, indexY, seed, scenarioPerformance)))
+    returnObj = {'indexX': indexX, 'indexY': indexY, 'seed': seed, 'scenarioPerformance': scenarioPerformance}
+    print('about to return ' + str(returnObj))
+    return returnObj
