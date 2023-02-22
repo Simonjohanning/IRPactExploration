@@ -566,10 +566,7 @@ def executeSeedRun(scenarioFiles, errorDef, model, X, Y, indexX, indexY, seed, m
             # simulationRunner.invokeJarExternalData(jarPath, errorDef, seed, 'resources/dataFiles/')
             # TODO go through invokation command again without the aggregation
             data = check_output(
-                PVactModelHelper.constructInvokationCommand('PVact_weightedCumulativeAnnualAdoptionDelta_external',
-                                                            {'dataDirPath': dataDirPath})
-                ,
-                shell=False).decode('utf-8').rstrip()
+                PVactModelHelper.constructInvokationCommand('PVact_external', {'inputFile': jarPath, 'dataDirPath': 'resources/dataFiles/', 'gnuPlotPath': configuration.gnuPlotPath, 'errorDef': errorDef, 'logFile': 'log' + str(seed) + '.log', 'outputFolder': 'output' + str(seed)}), shell = False).decode('utf-8').rstrip()
         else:
             print('Error! No model was set so no configuration file was created for this run')
         if (model == 'PVact'):
