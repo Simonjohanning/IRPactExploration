@@ -12,6 +12,7 @@ import configuration
 import simulationRunner
 import neighborRefiningSearch
 import PVactWrapper
+from subprocess import check_output, CalledProcessError
 from metaheuristic_algorithms.harmony_search import HarmonySearch
 from metaheuristic_algorithms.firefly_algorithm import FireflyAlgorithm
 from metaheuristic_algorithms.simplified_particle_swarm_optimization import SimplifiedParticleSwarmOptimization
@@ -562,12 +563,19 @@ def executeSeedRun(scenarioFiles, errorDef, model, X, Y, indexX, indexY, seed, m
                                                    configuration.scenarioPath + currentScenario + '.json')
         if (jarPath):
             # Invoke the simulation run with the respective scenario data (as dataDirPath)
-            simulationRunner.invokeJarExternalData(jarPath, errorDef, seed, 'resources/dataFiles/')
+            # simulationRunner.invokeJarExternalData(jarPath, errorDef, seed, 'resources/dataFiles/')
+            # TODO go through invokation command again without the aggregation
+            data = check_output(
+                PVactModelHelper.constructInvokationCommand('PVact_weightedCumulativeAnnualAdoptionDelta_external',
+                                                            {'dataDirPath': dataDirPath})
+                ,
+                shell=False).decode('utf-8').rstrip()
         else:
             print('Error! No model was set so no configuration file was created for this run')
         if (model == 'PVact'):
-            scenarioPerformance[currentScenario] = PVactModelHelper.readAnalysisData(
-                'resources/simulationFiles/images/AdoptionAnalysis.json')
+            #scenarioPerformance[currentScenario] = PVactModelHelper.readAnalysisData('resources/simulationFiles/images/AdoptionAnalysis.json')
+            # TODO revoke comment above and line below
+            scenarioPerformance[currentScenario] = data
     # print(str(scenarioPerformance))
     print('performance: ' + str((indexX, indexY, seed, scenarioPerformance)))
     returnObj = {'indexX': indexX, 'indexY': indexY, 'seed': seed, 'scenarioPerformance': scenarioPerformance}
